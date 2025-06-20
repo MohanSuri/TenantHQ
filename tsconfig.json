@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",                          // Modern JS target
+    "module": "CommonJS",                        // Required for Node.js
+    "lib": ["ES2020"],                           // Use latest JS features
+    "moduleResolution": "node",                  // Look up modules like Node
+    "rootDir": "./src",                          // Your source code
+    "outDir": "./dist",                          // Compiled JS output
+    "esModuleInterop": true,                     // Allow `import express from 'express'`
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,                              // Enable all strict checks
+    "skipLibCheck": true                         // Faster compile (skip node_modules checks)
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
