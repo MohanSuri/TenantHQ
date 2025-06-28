@@ -1,0 +1,64 @@
+# TenantHQ API Test Collection
+# Use with VS Code REST Client extension or import into Postman
+# Update the base URL below to match your environment
+
+@baseUrl = http://localhost:3000
+@contentType = application/json
+
+### Welcome Message
+GET {{baseUrl}}/
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Create a New Tenant
+POST {{baseUrl}}/api/tenant/create
+Content-Type: {{contentType}}
+
+{
+  "name": "Acme Corporation",
+  "domain": "acme.com"
+}
+
+### Create Another Tenant (for testing duplicates)
+POST {{baseUrl}}/api/tenant/create
+Content-Type: {{contentType}}
+
+{
+  "name": "Tech Startup Inc",
+  "domain": "techstartup.io"
+}
+
+### Try to Create Duplicate Tenant (should fail)
+POST {{baseUrl}}/api/tenant/create
+Content-Type: {{contentType}}
+
+{
+  "name": "Duplicate Test",
+  "domain": "acme.com"
+}
+
+### Get All Tenants
+GET {{baseUrl}}/api/tenant/
+
+### Test Invalid Input - Missing Name
+POST {{baseUrl}}/api/tenant/create
+Content-Type: {{contentType}}
+
+{
+  "domain": "invalid-test.com"
+}
+
+### Test Invalid Input - Missing Domain
+POST {{baseUrl}}/api/tenant/create
+Content-Type: {{contentType}}
+
+{
+  "name": "Invalid Test"
+}
+
+### Test Invalid Input - Empty Request Body
+POST {{baseUrl}}/api/tenant/create
+Content-Type: {{contentType}}
+
+{}

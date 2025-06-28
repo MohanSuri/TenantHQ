@@ -1,0 +1,40 @@
+import { TenantRepository } from "../repositories/TenantRepository";
+import logger from "../utils/logger";
+export class TenantService {
+ private static _tenantRepository: TenantRepository;
+ private static _instance: TenantService
+ private constructor(){
+    TenantService._tenantRepository = new TenantRepository();
+  }
+  public static getInstance(): TenantService {
+    if (!TenantService._instance) {
+        TenantService._instance = new TenantService();
+    }
+    return TenantService._instance;
+  }
+ 
+ public async createTenant(name: string, domain: string): Promise<any>{
+    logger.info('Creating tenant', { name, domain });
+    
+    const doesTenantExist = await TenantService._tenantRepository.doesTenantExist(domain);
+    if (doesTenantExist) {
+        logger.error('Tenant already exists', { domain });
+        throw new Error('Tenant already exists');
+    }
+    const result = await TenantService._tenantRepository.createTenant(name, domain);
+    logger.info('Tenant created successfully', { result });
+    return result;
+}
+
+public async getAllTenants(): Promise<any[]> {
+  logger.info('Fetching all tenants');
+  try {
+    const tenants = await TenantService._tenantRepository.getAllTenants();
+    logger.info('Tenants fetched successfully', { count: tenants.length });
+    return tenants;
+  } catch (error) {
+    logger.error('Error fetching tenants', { error: error instanceof Error ? error.message : 'Unknown error' });
+    throw new Error('Error fetching tenants: ' + (error instanceof Error ? error.message : 'Unknown error'));
+  }
+}
+}
