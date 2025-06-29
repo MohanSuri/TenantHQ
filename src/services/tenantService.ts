@@ -1,5 +1,7 @@
+import { UserRole } from "../models/User";
 import { TenantRepository } from "../repositories/TenantRepository";
 import logger from "../utils/logger";
+import { UserService } from "./UserService";
 export class TenantService {
  private static _tenantRepository: TenantRepository;
  private static _instance: TenantService
@@ -23,6 +25,8 @@ export class TenantService {
     }
     const result = await TenantService._tenantRepository.createTenant(name, domain);
     logger.info('Tenant created successfully', { result });
+    await UserService.getInstance().createUser("admin", `admin@${domain}`, domain, UserRole.ADMIN);
+    logger.info('Created admin user');
     return result;
 }
 

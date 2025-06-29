@@ -13,7 +13,7 @@ export const connectDB = async () => {
         }
         
         logger.info('Connecting to MongoDB...');
-        await mongoose.connect(mongoUri);
+        await mongoose.connect(mongoUri, {dbName: 'TenantManagementHQ'});
         logger.info('Connected to MongoDB successfully');
     } catch (error) {
         logger.error('Error connecting to MongoDB', { error: error instanceof Error ? error.message : 'Unknown error' });

@@ -15,7 +15,6 @@ export class TenantRepository {
     }
 
     async getTenantByDomain(domain: string): Promise<any>{
-        logger.info('Fetching tenant by domain', { domain });
         return await Tenant.findOne().where('domain').equals(domain).exec();
     }
 
