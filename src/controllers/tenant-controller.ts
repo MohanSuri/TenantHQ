@@ -1,6 +1,6 @@
 
 import { Request, RequestHandler, Response } from 'express';
-import { TenantService } from '../services/tenantService';
+import { TenantService } from '../services/tenant-service';
 import logger from '../utils/logger';
 /* 
 Example of req body
@@ -27,7 +27,7 @@ export const createTenant = async (req: Request, res: Response) => {
         });
         return;
     } catch (error) {
-        logger.error('Error creating tenant', { error: error instanceof Error ? error.message : 'Unknown error' });
+        logger.error(`Error creating tenant, ${ error instanceof Error ? error.message : 'Unknown error'}` );
         res.status(500).json({ error: 'Internal server error' });
     }
 };

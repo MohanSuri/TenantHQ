@@ -16,8 +16,8 @@ POST {{baseUrl}}/api/tenant/create
 Content-Type: {{contentType}}
 
 {
-  "name": "Acme Corporation",
-  "domain": "acme.com"
+  "name": "Acme Corporation1",
+  "domain": "acme4.com"
 }
 
 ### Create Another Tenant (for testing duplicates)

@@ -1,7 +1,7 @@
-import { TenantService } from '../../src/services/tenantService';
-import { TenantRepository } from '../../src/repositories/TenantRepository';
-import { UserService } from '../../src/services/UserService';
-import { UserRole } from '../../src/models/User';
+import { TenantService } from '../../src/services/tenant-service';
+import { TenantRepository } from '../../src/repositories/tenant-repository';
+import { UserService } from '../../src/services/user-service';
+import { UserRole } from '../../src/models/user';
 import logger from '../../src/utils/logger';
 
 // Mock the dependencies

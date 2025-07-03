@@ -1,4 +1,4 @@
-import {Tenant} from '../models/Tenant';
+import {Tenant} from '../models/tenant';
 import logger from '../utils/logger';
 
 export class TenantRepository {
