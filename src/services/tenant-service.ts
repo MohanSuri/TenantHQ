@@ -21,21 +21,22 @@ export class TenantService {
       const doesTenantExist = await TenantService._tenantRepository.doesTenantExist(domain);
       if (doesTenantExist) {
           logger.error('Tenant already exists', { domain });
-          throw new ConflictError(`Tenant ${domain}already exists`);
+          throw new ConflictError(`Tenant ${domain} already exists`);
       }
     
       const tenant = await TenantService._tenantRepository.createTenant(name, domain);
-      logger.info('Tenant created successfully', { tenant });
+      logger.info('Tenant created successfully', { result: tenant });
       const adminUser = await UserService.getInstance().createUser("admin", `admin@${domain}`, domain, UserRole.ADMIN);
-      return adminUser;
+      logger.info('Created admin user');
+      return tenant;
     
 }
 
 public async getAllTenants(): Promise<any[]> {
   logger.info('Fetching all tenants');
-  const tenants = await TenantService._tenantRepository.getAllTenants();
-  logger.info('Tenants fetched successfully', { count: tenants.length });
-  return tenants;
+    const tenants = await TenantService._tenantRepository.getAllTenants();
+    logger.info('Tenants fetched successfully', { count: tenants.length });
+    return tenants;
 }
 
 public async getTenantByDomain(domain: string):  Promise<any>{

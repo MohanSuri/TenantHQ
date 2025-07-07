@@ -11,7 +11,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "clean": "rm -rf dist",
-    "prebuild": "npm run clean"
+    "prebuild": "npm run clean",
+    "prepare": "husky"
   },
   "keywords": [
     "nodejs",
@@ -40,6 +41,7 @@
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.3",
+    "husky": "^9.1.7",
     "jest": "^30.0.3",
     "mongodb-memory-server": "^10.1.4",
     "mongosh": "^2.5.3",

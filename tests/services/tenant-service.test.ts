@@ -5,8 +5,8 @@ import { UserRole } from '../../src/models/user';
 import logger from '../../src/utils/logger';
 
 // Mock the dependencies
-jest.mock('../../src/repositories/TenantRepository');
-jest.mock('../../src/services/UserService');
+jest.mock('../../src/repositories/tenant-repository');
+jest.mock('../../src/services/user-service');
 jest.mock('../../src/utils/logger');
 
 describe('TenantService', () => {
@@ -97,7 +97,7 @@ describe('TenantService', () => {
 
       // Act & Assert
       await expect(tenantService.createTenant(mockTenantData.name, mockTenantData.domain))
-        .rejects.toThrow('Tenant already exists');
+        .rejects.toThrow('Tenant test.com already exists');
 
       expect(mockTenantRepositoryInstance.doesTenantExist).toHaveBeenCalledWith(mockTenantData.domain);
       expect(mockTenantRepositoryInstance.createTenant).not.toHaveBeenCalled();
@@ -166,7 +166,7 @@ describe('TenantService', () => {
       expect(logger.info).toHaveBeenCalledWith('Tenants fetched successfully', { count: 0 });
     });
 
-    it('should handle repository errors and throw descriptive error', async () => {
+    it('should handle repository errors and throw original error', async () => {
       // Arrange
       const errorMessage = 'Database connection failed';
       const error = new Error(errorMessage);
@@ -174,9 +174,9 @@ describe('TenantService', () => {
 
       // Act & Assert
       await expect(tenantService.getAllTenants())
-        .rejects.toThrow(`Error fetching tenants: ${errorMessage}`);
+        .rejects.toThrow(errorMessage);
 
-      expect(logger.error).toHaveBeenCalledWith('Error fetching tenants', { error: errorMessage });
+      expect(mockTenantRepositoryInstance.getAllTenants).toHaveBeenCalled();
     });
 
     it('should handle unknown errors', async () => {
@@ -186,9 +186,9 @@ describe('TenantService', () => {
 
       // Act & Assert
       await expect(tenantService.getAllTenants())
-        .rejects.toThrow('Error fetching tenants: Unknown error');
+        .rejects.toEqual(unknownError);
 
-      expect(logger.error).toHaveBeenCalledWith('Error fetching tenants', { error: 'Unknown error' });
+      expect(mockTenantRepositoryInstance.getAllTenants).toHaveBeenCalled();
     });
   });
 

@@ -1,10 +1,12 @@
 import { UserService } from '../../src/services/user-service';
 import { UserRepository } from '../../src/repositories/user-repository';
+import { TenantService } from '../../src/services/tenant-service';
 import { UserRole } from '../../src/models/user';
 import logger from '../../src/utils/logger';
 
 // Mock the dependencies
-jest.mock('../../src/repositories/UserRepository');
+jest.mock('../../src/repositories/user-repository');
+jest.mock('../../src/services/tenant-service');
 jest.mock('../../src/utils/logger');
 
 const MockedUserRepository = UserRepository as jest.MockedClass<typeof UserRepository>;
@@ -12,6 +14,7 @@ const MockedUserRepository = UserRepository as jest.MockedClass<typeof UserRepos
 describe('UserService', () => {
   let userService: UserService;
   let mockUserRepositoryInstance: jest.Mocked<UserRepository>;
+  let mockTenantServiceInstance: jest.Mocked<TenantService>;
 
   beforeEach(() => {
     // Clear all mocks
@@ -27,8 +30,15 @@ describe('UserService', () => {
       verifyPassword: jest.fn(),
     } as any;
 
+    mockTenantServiceInstance = {
+      getTenantByDomain: jest.fn(),
+    } as any;
+
     // Mock the constructor to return our mock instance
     (UserRepository as jest.MockedClass<typeof UserRepository>).mockImplementation(() => mockUserRepositoryInstance);
+    
+    // Mock TenantService.getInstance
+    jest.spyOn(TenantService, 'getInstance').mockReturnValue(mockTenantServiceInstance);
 
     // Reset the singleton instance to get a fresh instance with mocked dependencies
     (UserService as any)._instance = undefined;
@@ -61,8 +71,10 @@ describe('UserService', () => {
 
     it('should create a new user successfully with provided password', async () => {
       // Arrange
+      const mockTenant = { _id: '507f1f77bcf86cd799439012', name: 'Test Tenant', domain: 'example.com' };
       mockUserRepositoryInstance.doesUserExist.mockResolvedValue(false);
       mockUserRepositoryInstance.createUser.mockResolvedValue(mockCreatedUser);
+      mockTenantServiceInstance.getTenantByDomain.mockResolvedValue(mockTenant);
 
       // Act
       const result = await userService.createUser(
@@ -74,22 +86,25 @@ describe('UserService', () => {
       );
 
       // Assert
+      expect(mockTenantServiceInstance.getTenantByDomain).toHaveBeenCalledWith(mockUserData.domain);
       expect(mockUserRepositoryInstance.doesUserExist).toHaveBeenCalledWith(mockUserData.email);
       expect(mockUserRepositoryInstance.createUser).toHaveBeenCalledWith(
         mockUserData.userName,
         mockUserData.email,
-        mockUserData.password,
-        mockUserData.domain,
+        expect.any(String), // hashedPassword
+        mockTenant._id,
         mockUserData.role
       );
-      expect(result).toEqual(mockCreatedUser);
+      expect(result).toEqual({ userName: mockUserData.email, password: mockUserData.password });
       expect(logger.info).toHaveBeenCalledWith('user created successfully', { result: mockCreatedUser });
     });
 
     it('should create a new user successfully with default password when not provided', async () => {
       // Arrange
+      const mockTenant = { _id: '507f1f77bcf86cd799439012', name: 'Test Tenant', domain: 'example.com' };
       mockUserRepositoryInstance.doesUserExist.mockResolvedValue(false);
       mockUserRepositoryInstance.createUser.mockResolvedValue(mockCreatedUser);
+      mockTenantServiceInstance.getTenantByDomain.mockResolvedValue(mockTenant);
 
       // Act
       const result = await userService.createUser(
@@ -101,22 +116,25 @@ describe('UserService', () => {
       );
 
       // Assert
+      expect(mockTenantServiceInstance.getTenantByDomain).toHaveBeenCalledWith(mockUserData.domain);
       expect(mockUserRepositoryInstance.doesUserExist).toHaveBeenCalledWith(mockUserData.email);
       expect(mockUserRepositoryInstance.createUser).toHaveBeenCalledWith(
         mockUserData.userName,
         mockUserData.email,
-        'password', // Default password
-        mockUserData.domain,
+        expect.any(String), // hashedPassword - default 'password' hashed
+        mockTenant._id,
         mockUserData.role
       );
-      expect(result).toEqual(mockCreatedUser);
+      expect(result).toEqual({ userName: mockUserData.email, password: 'password' });
     });
 
     it('should create an admin user successfully', async () => {
       // Arrange
+      const mockTenant = { _id: '507f1f77bcf86cd799439012', name: 'Test Tenant', domain: 'example.com' };
       const adminUserData = { ...mockUserData, role: UserRole.ADMIN };
       mockUserRepositoryInstance.doesUserExist.mockResolvedValue(false);
       mockUserRepositoryInstance.createUser.mockResolvedValue({ ...mockCreatedUser, role: 'admin' });
+      mockTenantServiceInstance.getTenantByDomain.mockResolvedValue(mockTenant);
 
       // Act
       const result = await userService.createUser(
@@ -128,14 +146,15 @@ describe('UserService', () => {
       );
 
       // Assert
+      expect(mockTenantServiceInstance.getTenantByDomain).toHaveBeenCalledWith(adminUserData.domain);
       expect(mockUserRepositoryInstance.createUser).toHaveBeenCalledWith(
         adminUserData.userName,
         adminUserData.email,
-        adminUserData.password,
-        adminUserData.domain,
+        expect.any(String), // hashedPassword
+        mockTenant._id,
         adminUserData.role
       );
-      expect(result.role).toBe('admin');
+      expect(result).toEqual({ userName: adminUserData.email, password: adminUserData.password });
     });
 
     it('should throw error when user email already exists', async () => {
@@ -158,9 +177,11 @@ describe('UserService', () => {
 
     it('should handle repository errors during user creation', async () => {
       // Arrange
+      const mockTenant = { _id: '507f1f77bcf86cd799439012', name: 'Test Tenant', domain: 'example.com' };
       const errorMessage = 'Database connection failed';
       mockUserRepositoryInstance.doesUserExist.mockResolvedValue(false);
       mockUserRepositoryInstance.createUser.mockRejectedValue(new Error(errorMessage));
+      mockTenantServiceInstance.getTenantByDomain.mockResolvedValue(mockTenant);
 
       // Act & Assert
       await expect(userService.createUser(
@@ -175,8 +196,8 @@ describe('UserService', () => {
       expect(mockUserRepositoryInstance.createUser).toHaveBeenCalledWith(
         mockUserData.userName,
         mockUserData.email,
-        mockUserData.password,
-        mockUserData.domain,
+        expect.any(String), // hashedPassword
+        mockTenant._id,
         mockUserData.role
       );
     });
@@ -201,8 +222,10 @@ describe('UserService', () => {
 
     it('should handle edge case with empty string password', async () => {
       // Arrange
+      const mockTenant = { _id: '507f1f77bcf86cd799439012', name: 'Test Tenant', domain: 'example.com' };
       mockUserRepositoryInstance.doesUserExist.mockResolvedValue(false);
       mockUserRepositoryInstance.createUser.mockResolvedValue(mockCreatedUser);
+      mockTenantServiceInstance.getTenantByDomain.mockResolvedValue(mockTenant);
 
       // Act
       const result = await userService.createUser(
@@ -213,15 +236,17 @@ describe('UserService', () => {
         '' // Empty string password
       );
 
-      // Assert - Empty string should be passed through since ?? only checks for null/undefined
+      // Assert - Empty string should be hashed since trim() on empty string is still empty, but not null/undefined
+      expect(mockTenantServiceInstance.getTenantByDomain).toHaveBeenCalledWith(mockUserData.domain);
+      expect(mockUserRepositoryInstance.doesUserExist).toHaveBeenCalledWith(mockUserData.email);
       expect(mockUserRepositoryInstance.createUser).toHaveBeenCalledWith(
         mockUserData.userName,
         mockUserData.email,
-        '', // Empty string password passed through
-        mockUserData.domain,
+        expect.any(String), // Empty string gets hashed
+        mockTenant._id,
         mockUserData.role
       );
-      expect(result).toEqual(mockCreatedUser);
+      expect(result).toEqual({ userName: mockUserData.email, password: '' });
     });
   });
 
@@ -240,6 +265,7 @@ describe('UserService', () => {
   describe('Edge Cases and Input Validation', () => {
     it('should handle special characters in email', async () => {
       // Arrange
+      const mockTenant = { _id: '507f1f77bcf86cd799439012', name: 'Test Tenant', domain: 'example.com' };
       const specialEmail = 'test+user@sub.example.com';
       const mockResult = {
         _id: '507f1f77bcf86cd799439011',
@@ -252,6 +278,7 @@ describe('UserService', () => {
       };
       mockUserRepositoryInstance.doesUserExist.mockResolvedValue(false);
       mockUserRepositoryInstance.createUser.mockResolvedValue(mockResult);
+      mockTenantServiceInstance.getTenantByDomain.mockResolvedValue(mockTenant);
 
       // Act
       const result = await userService.createUser(
@@ -263,13 +290,15 @@ describe('UserService', () => {
       );
 
       // Assert
+      expect(mockTenantServiceInstance.getTenantByDomain).toHaveBeenCalledWith('example.com');
       expect(mockUserRepositoryInstance.doesUserExist).toHaveBeenCalledWith(specialEmail);
-      expect(result).toEqual(mockResult);
-      expect(result.email).toBe(specialEmail);
+      expect(result).toEqual({ userName: specialEmail, password: 'password' });
+      expect(result.userName).toBe(specialEmail);
     });
 
     it('should handle special characters in username', async () => {
       // Arrange
+      const mockTenant = { _id: '507f1f77bcf86cd799439012', name: 'Test Tenant', domain: 'example.com' };
       const specialUsername = 'test-user_123';
       const mockResult = {
         _id: '507f1f77bcf86cd799439011',
@@ -282,6 +311,7 @@ describe('UserService', () => {
       };
       mockUserRepositoryInstance.doesUserExist.mockResolvedValue(false);
       mockUserRepositoryInstance.createUser.mockResolvedValue(mockResult);
+      mockTenantServiceInstance.getTenantByDomain.mockResolvedValue(mockTenant);
 
       // Act
       const result = await userService.createUser(
@@ -293,15 +323,16 @@ describe('UserService', () => {
       );
 
       // Assert
+      expect(mockTenantServiceInstance.getTenantByDomain).toHaveBeenCalledWith('example.com');
       expect(mockUserRepositoryInstance.createUser).toHaveBeenCalledWith(
         specialUsername,
         'test@example.com',
-        'password',
-        'example.com',
+        expect.any(String), // hashedPassword
+        mockTenant._id,
         UserRole.USER
       );
-      expect(result).toEqual(mockResult);
-      expect(result.userName).toBe(specialUsername);
+      expect(result).toEqual({ userName: 'test@example.com', password: 'password' });
+      expect(result.userName).toBe('test@example.com');
     });
   });
 });
