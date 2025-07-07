@@ -1,5 +1,5 @@
-import {UserRole, User} from '../models/user';
-import logger from '../utils/logger';
+import {UserRole, User} from '@models/user';
+import logger from '@utils/logger';
 
 export class UserRepository {
 

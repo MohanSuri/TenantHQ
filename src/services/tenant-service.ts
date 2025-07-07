@@ -1,8 +1,8 @@
-import { ConflictError, CustomError, InternalServerError } from "../errors/custom-error";
-import { UserRole } from "../models/user";
-import { TenantRepository } from "../repositories/tenant-repository";
-import logger from "../utils/logger";
-import { UserService } from "./user-service";
+import { ConflictError, CustomError, InternalServerError } from "@errors/custom-error";
+import { UserRole } from "@models/user";
+import { TenantRepository } from "@repositories/tenant-repository";
+import logger from "@utils/logger";
+import { UserService } from "@services/user-service";
 export class TenantService {
  private static _tenantRepository: TenantRepository;
  private static _instance: TenantService

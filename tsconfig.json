@@ -12,7 +12,20 @@
     "esModuleInterop": true,                     // Allow `import express from 'express'`
     "forceConsistentCasingInFileNames": true,
     "strict": true,                              // Enable all strict checks
-    "skipLibCheck": true                         // Faster compile (skip node_modules checks)
+    "skipLibCheck": true,                        // Faster compile (skip node_modules checks)
+    "baseUrl": "./src",                          // Base directory for resolving non-relative module names
+    "paths": {
+      "@/*": ["*"],                              // Allow @/ imports from src
+      "@controllers/*": ["controllers/*"],
+      "@services/*": ["services/*"],
+      "@models/*": ["models/*"],
+      "@repositories/*": ["repositories/*"],
+      "@middleware/*": ["middleware/*"],
+      "@routes/*": ["routes/*"],
+      "@utils/*": ["utils/*"],
+      "@errors/*": ["errors/*"],
+      "@config/*": ["config/*"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

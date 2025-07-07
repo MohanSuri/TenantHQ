@@ -1,7 +1,7 @@
 
 import { NextFunction, Request,  Response } from 'express';
-import { TenantService } from '../services/tenant-service';
-import logger from '../utils/logger';
+import { TenantService } from '@services/tenant-service';
+import logger from '@utils/logger';
 /* 
 Example of req body
 {

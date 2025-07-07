@@ -1,8 +1,8 @@
-import { UserRepository } from '../repositories/user-repository';
-import { UserRole } from '../models/user';
-import logger from '../utils/logger';
+import { UserRepository } from '@repositories/user-repository';
+import { UserRole } from '@models/user';
+import logger from '@utils/logger';
 import bcrypt from 'bcryptjs';
-import { TenantService } from './tenant-service';
+import { TenantService } from '@services/tenant-service';
 
 export class UserService {
     private static _instance: UserService;

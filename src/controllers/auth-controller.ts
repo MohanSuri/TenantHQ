@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/auth-service';
-import logger from '../utils/logger';
-import { BadRequestError } from '../errors/custom-error';
+import { AuthService } from '@services/auth-service';
+import logger from '@utils/logger';
+import { BadRequestError } from '@errors/custom-error';
 
 
 export  const login = async (req: Request, res: Response) => {

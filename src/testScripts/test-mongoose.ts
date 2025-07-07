@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import {TenantRepository} from '../repositories/tenant-repository';
-import { UserRepository } from '../repositories/user-repository';
+import {TenantRepository} from '@repositories/tenant-repository';
+import { UserRepository } from '@repositories/user-repository';
 dotenv.config();
 
 async function connectToDatabase() {

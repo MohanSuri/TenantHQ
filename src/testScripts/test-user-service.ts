@@ -1,6 +1,6 @@
-import { UserService } from '../services/user-service';
-import { UserRole } from '../models/user';
-import { connectDB } from '../db';
+import { UserService } from '@services/user-service';
+import { UserRole } from '@models/user';
+import { connectDB } from '@/db';
 
 async function testUserService() {
     try {

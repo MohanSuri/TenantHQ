@@ -1,5 +1,5 @@
-import {Tenant} from '../models/tenant';
-import logger from '../utils/logger';
+import {Tenant} from '@models/tenant';
+import logger from '@utils/logger';
 
 export class TenantRepository {
     async createTenant(name:string, domain: string): Promise<any> {

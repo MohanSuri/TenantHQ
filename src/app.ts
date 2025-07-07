@@ -1,11 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import {connectDB} from './db';
-import logger from './utils/logger';
-import tenantRoutes from './routes/tenant.routes';
-import authRoutes from './routes/auth.routes';
-import { errorHandler } from './middleware/error-handler-middleware';
+import {connectDB} from '@/db';
+import logger from '@utils/logger';
+import tenantRoutes from '@routes/tenant.routes';
+import authRoutes from '@routes/auth.routes';
+import { errorHandler } from '@middleware/error-handler-middleware';
 
 // Load environment variables
 dotenv.config();

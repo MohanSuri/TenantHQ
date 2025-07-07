@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {createTenant, getAllTenants}  from "../controllers/tenant-controller";
+import {createTenant, getAllTenants}  from "@controllers/tenant-controller";
 import  asyncHandler from 'express-async-handler';
 
 const router = Router();

@@ -1,7 +1,7 @@
-import { UserRepository } from '../repositories/user-repository';
-import logger from '../utils/logger';
+import { UserRepository } from '@repositories/user-repository';
+import logger from '@utils/logger';
 import bcrypt from 'bcryptjs';
-import { InternalServerError, UnauthorizedError } from '../errors/custom-error';
+import { InternalServerError, UnauthorizedError } from '@errors/custom-error';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config(); 
