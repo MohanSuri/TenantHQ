@@ -38,16 +38,4 @@ export class UserService {
         logger.info('user created successfully', { result });
         return {userName: email, password};
     }
-
-    public async login(email: string, password: string): Promise<any> {
-        try {
-            const user = await UserService._userRepository.getUserByEmail(email);
-            if (!user) throw new Error(`User ${email} doesn't exist`);
-
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) return {}
-        } catch (error) {
-            return {error}
-        }
-    }
 }

@@ -62,3 +62,12 @@ POST {{baseUrl}}/api/tenant/create
 Content-Type: {{contentType}}
 
 {}
+
+### 
+POST {{baseUrl}}/api/login
+Content-Type: {{contentType}}
+
+{
+    "email": "admin@techstartup2.io",
+    "password": "password"
+}

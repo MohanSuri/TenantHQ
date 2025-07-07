@@ -3,6 +3,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import {connectDB} from './db';
 import logger from './utils/logger';
+import tenantRoutes from './routes/tenant.routes';
+import authRoutes from './routes/auth.routes';
+import { errorHandler } from './middleware/error-handler-middleware';
 
 // Load environment variables
 dotenv.config();
@@ -31,9 +34,11 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Import routes
-import tenantRoutes from './routes/tenant.routes';
 app.use('/api/tenant', tenantRoutes);
+app.use('/api/', authRoutes);
+
+// error handler middleware
+app.use(errorHandler);
 
 // Start server
 const startServer = async () => {
