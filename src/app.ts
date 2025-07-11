@@ -6,6 +6,7 @@ import logger from '@utils/logger';
 import tenantRoutes from '@routes/tenant.routes';
 import authRoutes from '@routes/auth.routes';
 import { errorHandler } from '@middleware/error-handler-middleware';
+import userRoutes from './routes/user.routes';
 
 // Load environment variables
 dotenv.config();
@@ -36,6 +37,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/tenant', tenantRoutes);
 app.use('/api/', authRoutes);
+app.use('/api/user', userRoutes);
 
 // error handler middleware
 app.use(errorHandler);

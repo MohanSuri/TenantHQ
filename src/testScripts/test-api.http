@@ -71,3 +71,35 @@ Content-Type: {{contentType}}
     "email": "admin@techstartup2.io",
     "password": "password"
 }
+
+
+### Get all users
+GET {{baseUrl}}/api/user
+Content-Type: {{contentType}}
+
+
+
+### Get user id
+GET {{baseUrl}}/api/user/1
+Content-Type: {{contentType}}
+
+
+### POST user id
+POST {{baseUrl}}/api/user/
+Content-Type: {{contentType}} 
+
+{
+
+}
+
+### PATCH user id
+PATCH {{baseUrl}}/api/user/1
+Content-Type: {{contentType}} 
+
+{
+
+}
+
+### Delete user id
+DELETE {{baseUrl}}/api/user/1
+Content-Type: {{contentType}}
