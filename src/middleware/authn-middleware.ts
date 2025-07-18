@@ -39,14 +39,14 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 }
 
 const validateJwtPayload = (decoded: AuthTokenPayload) => {
-    const missingfields: string[] = [];
+    const missingFields: string[] = [];
     if (typeof decoded?.userId !== 'string')
-        missingfields.push('userId');
+        missingFields.push('userId');
     if (typeof decoded?.tenantId !== 'string')
-        missingfields.push('tenantId');
+        missingFields.push('tenantId');
     if ( typeof decoded?.role !== 'string')
-        missingfields.push('role');
+        missingFields.push('role');
     
-    if (missingfields.length)
-        throw new UnauthorizedError(`Malformed token, missing ${missingfields.join(', ')}`)
+    if (missingFields.length)
+        throw new UnauthorizedError(`Malformed token, missing ${missingFields.join(', ')}`)
 }

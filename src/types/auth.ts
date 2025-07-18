@@ -1,4 +1,4 @@
-export interface AuthTokenPayload{
+export interface AuthTokenPayload {
     userId: string;
     tenantId: string;
     role: string;
