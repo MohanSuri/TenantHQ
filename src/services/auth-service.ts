@@ -3,8 +3,7 @@ import logger from '@utils/logger';
 import bcrypt from 'bcryptjs';
 import { InternalServerError, UnauthorizedError } from '@errors/custom-error';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-dotenv.config(); 
+import { config } from '@/config/config';
 
 export class AuthService {
     private static _instance: AuthService;
@@ -29,8 +28,8 @@ export class AuthService {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) throw new UnauthorizedError('Invalid username/password');
         
-        const jwtSecret = process.env.JWT_SECRET;
-        const jwtExpiry = process.env.JWT_EXPIRY;
+        const jwtSecret = config.JWT_SECRET;
+        const jwtExpiry = config.JWT_EXPIRY;
         if (!jwtSecret || !jwtExpiry) throw new InternalServerError('Environment is not configured');
         
         const token = jwt.sign(
