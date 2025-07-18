@@ -24,7 +24,8 @@
       "@routes/*": ["routes/*"],
       "@utils/*": ["utils/*"],
       "@errors/*": ["errors/*"],
-      "@config/*": ["config/*"]
+      "@config/*": ["config/*"],
+      "@types/*": ["types/*"]
     }
   },
   "include": ["src/**/*"],
