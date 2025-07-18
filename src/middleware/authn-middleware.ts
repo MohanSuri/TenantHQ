@@ -1,7 +1,8 @@
 import {Request, Response, NextFunction} from 'express';
 import {UnauthorizedError} from '@errors/custom-error';
-import jwt, { type JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { config } from '@config/config'
+import { AuthTokenPayload } from '@/types/auth';
 
 declare global {
     namespace Express {
@@ -25,8 +26,8 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 
     // `jwt.verify` throws if the token is invalid or expired — this is intentionally uncaught,
     // allowing global error-handling middleware to handle it.
-    const decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload;
-    isValidJwtPayload(decoded); 
+    const decoded = jwt.verify(token, config.JWT_SECRET) as AuthTokenPayload;
+    validateJwtPayload(decoded); 
     
     req.user = {
         userId: decoded.userId,
@@ -37,10 +38,15 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     next();
 }
 
-const isValidJwtPayload = (decoded: any) => {
-    if (!decoded.userId || typeof decoded.userId !== 'string' ||
-        !decoded.tenantId || typeof decoded.tenantId !== 'string' ||
-        !decoded.role || typeof decoded.role !== 'string'
-    )
-    throw new UnauthorizedError('Malformed token')
+const validateJwtPayload = (decoded: AuthTokenPayload) => {
+    const missingfields: string[] = [];
+    if (typeof decoded?.userId !== 'string')
+        missingfields.push('userId');
+    if (typeof decoded?.tenantId !== 'string')
+        missingfields.push('tenantId');
+    if ( typeof decoded?.role !== 'string')
+        missingfields.push('role');
+    
+    if (missingfields.length)
+        throw new UnauthorizedError(`Malformed token, missing ${missingfields.join(', ')}`)
 }
