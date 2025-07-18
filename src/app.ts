@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import {config} from '@config/config';
 import {connectDB} from '@/db';
 import logger from '@utils/logger';
 import tenantRoutes from '@routes/tenant.routes';
@@ -8,11 +8,7 @@ import authRoutes from '@routes/auth.routes';
 import { errorHandler } from '@middleware/error-handler-middleware';
 import userRoutes from './routes/user.routes';
 
-// Load environment variables
-dotenv.config();
-
 const app = express();
-const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Middleware
 app.use(express.json());
@@ -44,12 +40,13 @@ app.use(errorHandler);
 
 // Start server
 const startServer = async () => {
+    const port = config.PORT
     try {
         await connectDB();
-        app.listen(PORT, '0.0.0.0', () => {
-            logger.info(`Server is running on port ${PORT}`);
-            console.log(`🚀 Server is running on port ${PORT}`);
-            console.log(`📚 API Documentation: http://localhost:${PORT}/`);
+        app.listen(config.PORT, '0.0.0.0', () => {
+            logger.info(`Server is running on port ${port}`);
+            console.log(`🚀 Server is running on port ${port}`);
+            console.log(`📚 API Documentation: http://localhost:${port}/`);
         });
     } catch (error) {
         logger.error('Failed to start server', { error: error instanceof Error ? error.message : 'Unknown error' });
