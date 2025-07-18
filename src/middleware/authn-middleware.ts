@@ -1,8 +1,7 @@
 import {Request, Response, NextFunction} from 'express';
-import {InternalServerError, UnauthorizedError} from '@errors/custom-error';
+import {UnauthorizedError} from '@errors/custom-error';
 import jwt, { type JwtPayload } from 'jsonwebtoken';
-import dotenv from 'dotenv';
-dotenv.config();
+import { config } from '@config/config'
 
 declare global {
     namespace Express {
@@ -24,13 +23,9 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
     if (parts.length !== 2 || !parts[1]) throw new UnauthorizedError('Invalid auth header format');
     const token = parts[1];
 
-    if (!process.env.JWT_SECRET) {
-        throw new InternalServerError('JWT_SECRET is not defined in the environment variables');
-    }
-
     // `jwt.verify` throws if the token is invalid or expired — this is intentionally uncaught,
     // allowing global error-handling middleware to handle it.
-    const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload;
+    const decoded = jwt.verify(token, config.JWT_SECRET) as JwtPayload;
     isValidJwtPayload(decoded); 
     
     req.user = {
