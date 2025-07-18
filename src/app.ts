@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import {config} from '@config/config';
+import { config } from '@config/config';
 import {connectDB} from '@/db';
 import logger from '@utils/logger';
 import tenantRoutes from '@routes/tenant.routes';
@@ -43,7 +43,7 @@ const startServer = async () => {
     const port = config.PORT
     try {
         await connectDB();
-        app.listen(config.PORT, '0.0.0.0', () => {
+        app.listen(port, '0.0.0.0', () => {
             logger.info(`Server is running on port ${port}`);
             console.log(`🚀 Server is running on port ${port}`);
             console.log(`📚 API Documentation: http://localhost:${port}/`);
