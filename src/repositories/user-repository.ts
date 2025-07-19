@@ -1,4 +1,4 @@
-import {UserRole, User} from '@models/user';
+import {UserRole, User, IUser} from '@models/user';
 import logger from '@utils/logger';
 
 export class UserRepository {
@@ -20,7 +20,7 @@ export class UserRepository {
         return await User.findOne({ email });
     }
     
-    async getUserById(userId: string): Promise<any> {
+    async getUserById(userId: string): Promise<IUser | null> {
         return await User.findById(userId);
     }
 
