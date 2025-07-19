@@ -55,10 +55,12 @@ describe('TenantService', () => {
 
     const mockCreatedTenant = {
       _id: '507f1f77bcf86cd799439011',
+      id: '507f1f77bcf86cd799439011',
       name: 'Test Tenant',
       domain: 'test.com',
-      createdAt: new Date()
-    };
+      createdAt: new Date(),
+      toString: () => '507f1f77bcf86cd799439011'
+    } as any;
 
     it('should create a new tenant successfully', async () => {
       // Arrange
@@ -79,7 +81,7 @@ describe('TenantService', () => {
       expect(mockUserServiceInstance.createUser).toHaveBeenCalledWith(
         'admin',
         'admin@test.com',
-        'test.com',
+        '507f1f77bcf86cd799439011',
         UserRole.ADMIN
       );
       expect(result).toEqual(mockCreatedTenant);

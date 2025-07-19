@@ -1,6 +1,12 @@
-import mongoose from "mongoose";
+import mongoose, { Document } from "mongoose";
 
-const tenantSchema = new mongoose.Schema({
+export interface ITenant extends Document {
+    name: string;
+    createdAt: Date;
+    domain: string;
+}
+
+const tenantSchema = new mongoose.Schema<ITenant>({
     name: {
     type: String,
     required: true,
@@ -16,4 +22,4 @@ const tenantSchema = new mongoose.Schema({
   },
 });
 
-export const Tenant = mongoose.model("Tenant", tenantSchema);
+export const Tenant = mongoose.model<ITenant>("Tenant", tenantSchema);

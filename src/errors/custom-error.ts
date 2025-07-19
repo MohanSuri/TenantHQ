@@ -27,7 +27,7 @@ export class UnauthorizedError extends CustomError {
 }
 
 export class BadRequestError extends CustomError {
-    constructor(message = 'BadRequest', statusCode = 401, details?: any){
+    constructor(message = 'BadRequest', statusCode = 400, details?: any){
         super(message, statusCode, details);
     }
 }
