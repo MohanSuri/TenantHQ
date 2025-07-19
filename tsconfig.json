@@ -8,7 +8,6 @@
     "outDir": "./dist",                          // Compiled JS output
     "sourceMap": true,                           // Generate source maps for debugging
     "inlineSourceMap": false,                    // Keep source maps in separate files
-    "sourceRoot": "./src",                       // Source root for debugging
     "esModuleInterop": true,                     // Allow `import express from 'express'`
     "forceConsistentCasingInFileNames": true,
     "strict": true,                              // Enable all strict checks

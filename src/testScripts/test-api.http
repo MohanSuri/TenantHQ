@@ -1,9 +1,14 @@
 # TenantHQ API Test Collection
 # Use with VS Code REST Client extension or import into Postman
-# Update the base URL below to match your environment
+# Update the base URL and token below to match your environment
 
 @baseUrl = http://localhost:3000
 @contentType = application/json
+# Update this token after login - copy from login response
+@authToken = <Bearer token>
+# ================================
+# BASIC HEALTH CHECKS
+# ================================
 
 ### Welcome Message
 GET {{baseUrl}}/
@@ -11,16 +16,20 @@ GET {{baseUrl}}/
 ### Health Check
 GET {{baseUrl}}/health
 
+# ================================
+# TENANT MANAGEMENT
+# ================================
+
 ### Create a New Tenant
 POST {{baseUrl}}/api/tenant/create
 Content-Type: {{contentType}}
 
 {
-  "name": "Acme Corporation1",
-  "domain": "acme4.com"
+  "name": "Acme Corporation",
+  "domain": "acme.com"
 }
 
-### Create Another Tenant (for testing duplicates)
+### Create Another Tenant (for testing)
 POST {{baseUrl}}/api/tenant/create
 Content-Type: {{contentType}}
 
@@ -63,43 +72,146 @@ Content-Type: {{contentType}}
 
 {}
 
-### 
+# ================================
+# AUTHENTICATION
+# ================================
+
+### Login to get authentication token
 POST {{baseUrl}}/api/login
 Content-Type: {{contentType}}
 
 {
-    "email": "admin@techstartup2.io",
+    "email": "admin@techstartup.io",
     "password": "password"
 }
 
 
-### Get all users
+# ================================
+# USER MANAGEMENT
+# ================================
+
+### Get All Users
 GET {{baseUrl}}/api/user
 Content-Type: {{contentType}}
 
-
-
-### Get user id
+### Get Specific User by ID
 GET {{baseUrl}}/api/user/1
 Content-Type: {{contentType}}
 
-
-### POST user id
+### Create New User - Valid Admin User
 POST {{baseUrl}}/api/user/
 Content-Type: {{contentType}} 
+Authorization: {{authToken}}
 
 {
-
+  "userName": "John Doe Smith",
+  "password": "securepassword123",
+  "alias": "jdoesmith",
+  "role": "ADMIN"
 }
 
-### PATCH user id
-PATCH {{baseUrl}}/api/user/1
+### Create New User - Valid Regular User
+POST {{baseUrl}}/api/user/
 Content-Type: {{contentType}} 
+Authorization: {{authToken}}
 
 {
-
+  "userName": "Jane Smith Wilson",
+  "password": "mypassword456",
+  "alias": "jswilson",
+  "role": "USER"
 }
 
-### Delete user id
+### Create New User - Another Admin
+POST {{baseUrl}}/api/user/
+Content-Type: {{contentType}} 
+Authorization: {{authToken}}
+
+{
+  "userName": "Michael Johnson",
+  "password": "adminpass789",
+  "alias": "mjohnson",
+  "role": "ADMIN"
+}
+
+### Create User - Invalid Input: Short Username (should fail)
+POST {{baseUrl}}/api/user/
+Content-Type: {{contentType}} 
+Authorization: {{authToken}}
+
+{
+  "userName": "Srt",
+  "password": "password123",
+  "alias": "short",
+  "role": "USER"
+}
+
+### Create User - Invalid Input: Short Password (should fail)
+POST {{baseUrl}}/api/user/
+Content-Type: {{contentType}} 
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY1ZWNjNzQ2MDBiMjMwOTc5YmY4NjciLCJ0ZW5hbnRJZCI6IjY4NjVlY2M2NDYwMGIyMzA5NzliZjg2MyIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc1MjkzODI4MiwiZXhwIjoxNzUyOTQxODgyfQ.bckHC8R1Ej820GDZY-L14IhVtYtSyKMUyNktBUai-5E
+
+{
+  "userName": "Valid Username",
+  "password": "short",
+  "alias": "validalias",
+  "role": "USER"
+}
+
+### Create User - Invalid Input: Short Alias (should fail)
+POST {{baseUrl}}/api/user/
+Content-Type: {{contentType}} 
+Authorization: {{authToken}}
+
+{
+  "userName": "Valid Username",
+  "password": "validpassword",
+  "alias": "sh",
+  "role": "USER"
+}
+
+### Create User - Invalid Input: Missing Required Fields (should fail)
+POST {{baseUrl}}/api/user/
+Content-Type: {{contentType}} 
+Authorization: {{authToken}}
+
+{
+  "userName": "Valid Username"
+}
+
+### Create User - Invalid Input: Invalid Role (should fail)
+POST {{baseUrl}}/api/user/
+Content-Type: {{contentType}} 
+Authorization: {{authToken}}
+
+{
+  "userName": "Valid Username",
+  "password": "validpassword",
+  "alias": "validalias",
+  "role": "INVALID_ROLE"
+}
+
+### Create User - Without Authentication (should fail)
+POST {{baseUrl}}/api/user/
+Content-Type: {{contentType}}
+
+{
+  "userName": "Valid Username",
+  "password": "validpassword",
+  "alias": "validalias",
+  "role": "USER"
+}
+
+### Update User
+PATCH {{baseUrl}}/api/user/1
+Content-Type: {{contentType}}
+Authorization: {{authToken}}
+
+{
+  "userName": "Updated User Name"
+}
+
+### Delete User
 DELETE {{baseUrl}}/api/user/1
 Content-Type: {{contentType}}
+Authorization: {{authToken}}

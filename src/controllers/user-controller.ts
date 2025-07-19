@@ -1,7 +1,30 @@
+import { BadRequestError, NotFoundError } from '@/errors/custom-error';
+import { ITenant } from '@/models/tenant';
+import { TenantService } from '@/services/tenant-service';
+import { UserService } from '@/services/user-service';
+import { CreateUserPayloadSchema } from '@/types/user';
+import logger from '@/utils/logger';
 import { Request, Response } from 'express';
 
-export const createUser = async(req:Request, res: Response) =>{
-    res.status(201).json({ message: "User created successfully" });
+export const createUser = async(req: Request, res: Response) => {
+    logger.info('Received request to create new user');
+    
+    const parsed = CreateUserPayloadSchema.safeParse(req.body);
+    if (!parsed.success) {
+        logger.error(`Invalid input data: ${parsed.error.message}`);
+        throw new BadRequestError(`Invalid input data ${parsed.error.message}`)
+    }
+
+    const { userName, alias, password, role } = parsed.data;
+
+    const tenantId = req.user!.tenantId;
+    const tenant: ITenant = await TenantService.getInstance().getTenantById(tenantId);
+    if (!tenant) throw new NotFoundError(`Tenant ${tenantId} not found`);
+    
+    const email = `${alias}@${tenant.domain}`
+    
+    const result = await UserService.getInstance().createUser(userName,  email, tenant.id.toString(), role, password);
+    res.status(201).json({ message: "User created successfully", result });
 }
 
 export const getUser = async(req: Request, res: Response) => {

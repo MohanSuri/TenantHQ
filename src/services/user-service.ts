@@ -2,7 +2,6 @@ import { UserRepository } from '@repositories/user-repository';
 import { IUser, UserRole } from '@models/user';
 import logger from '@utils/logger';
 import bcrypt from 'bcryptjs';
-import { TenantService } from '@services/tenant-service';
 
 export class UserService {
     private static _instance: UserService;
@@ -18,7 +17,8 @@ export class UserService {
         UserService._userRepository = new UserRepository();
     }
 
-    public async createUser(userName: string, email: string, domain: string, role: UserRole, password?: string): Promise<any> {
+    // This method assumes that the tenantId has been validated.
+    public async createUser(userName: string, email: string, tenantId: string, role: UserRole = UserRole.USER, password?: string): Promise<any> {
         const userExists = await UserService._userRepository.doesUserExist(email);
         if (userExists) {
             logger.error('user email already exists', { email });
@@ -27,16 +27,9 @@ export class UserService {
         password = password?.trim() ?? 'password'
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Convert tenantId to ObjectId if it's a valid ObjectId string
-        const tenant = await TenantService.getInstance().getTenantByDomain(domain);
-
-        if (!tenant) {
-            logger.error(`Tenant with domain ${domain} does not exist`);
-            throw new Error(`Tenant with domain ${domain} does not exist.`);
-        }
-        const result = await UserService._userRepository.createUser(userName, email, hashedPassword, tenant._id, role ?? UserRole.USER);
+        const result = await UserService._userRepository.createUser(userName, email, hashedPassword, tenantId, role ?? UserRole.USER);
         logger.info('user created successfully', { result });
-        return {userName: email, password};
+        return {email: email};
     }
 
     public async getUser(userId: string): Promise<IUser | null>{
