@@ -2,7 +2,7 @@ import { AuthService } from '../../src/services/auth-service';
 import { UserRepository } from '../../src/repositories/user-repository';
 import { UserService } from '../../src/services/user-service';
 import { UnauthorizedError, InternalServerError } from '../../src/errors/custom-error';
-import { UserRole } from '../../src/models/user';
+import { IUser, UserRole } from '../../src/models/user';
 import { AuthenticatedUser } from '../../src/types/auth';
 import { RolePermissions } from '../../src/constants/permissions';
 import bcrypt from 'bcryptjs';
@@ -32,8 +32,9 @@ describe('AuthService', () => {
     password: 'hashedpassword',
     tenantId: '507f1f77bcf86cd799439011',
     role: UserRole.USER,
-    createdAt: new Date('2023-01-01T00:00:00.000Z')
-  } as any; // Mock as any to avoid Document interface complexity
+    createdAt: new Date('2023-01-01T00:00:00.000Z'),
+    toString: () => '507f1f77bcf86cd799439012'
+  } as unknown as IUser; // Cast through unknown to match interface
 
   const mockAdminUser = {
     _id: '507f1f77bcf86cd799439013',
@@ -42,8 +43,9 @@ describe('AuthService', () => {
     password: 'hashedpassword',
     tenantId: '507f1f77bcf86cd799439011',
     role: UserRole.ADMIN,
-    createdAt: new Date('2023-01-01T00:00:00.000Z')
-  } as any; // Mock as any to avoid Document interface complexity
+    createdAt: new Date('2023-01-01T00:00:00.000Z'),
+    toString: () => '507f1f77bcf86cd799439013'
+  } as unknown as IUser; // Cast through unknown to match interface
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -97,8 +99,8 @@ describe('AuthService', () => {
       expect(bcrypt.compare).toHaveBeenCalledWith('password', 'hashedpassword');
       expect(jwt.sign).toHaveBeenCalledWith(
         {
-          userId: mockUser._id.toString(),
-          tenantId: mockUser.tenantId.toString(),
+          userId: (mockUser._id as string).toString(),
+          tenantId: (mockUser.tenantId as unknown as string).toString(),
           role: mockUser.role,
         },
         'test-secret',
@@ -150,16 +152,15 @@ describe('AuthService', () => {
       role: 'ADMIN'
     };
 
-    it('should return true when user has required permission', async () => {
+    it('should not throw when user has required permission', async () => {
       // Arrange
       mockUserServiceInstance.getUser.mockResolvedValue(mockAdminUser);
       const adminAuth = { ...authenticatedAdmin, role: 'ADMIN' };
 
-      // Act
-      const result = await authService.doesUserHavePermission(adminAuth, 'user:create');
-
-      // Assert
-      expect(result).toBe(true);
+      // Act & Assert - should not throw
+      await expect(authService.doesUserHavePermission(adminAuth, 'user:create'))
+        .resolves.not.toThrow();
+      
       expect(mockUserServiceInstance.getUser).toHaveBeenCalledWith(adminAuth.userId);
       expect(logger.info).toHaveBeenCalledWith(`Checking for permissions of, ${adminAuth.userId}, user:create`);
       expect(logger.info).toHaveBeenCalledWith(`User ${adminAuth.userId} is authorized for user:create`);
@@ -224,7 +225,7 @@ describe('AuthService', () => {
       expect(RolePermissions['USER']).toEqual([]);
     });
 
-    it('should successfully authorize admin user for multiple permissions', async () => {
+    it('should not throw when admin user has multiple permissions', async () => {
       // Arrange
       mockUserServiceInstance.getUser.mockResolvedValue(mockAdminUser);
 
@@ -232,11 +233,9 @@ describe('AuthService', () => {
       const adminPermissions = ['user:create', 'user:update', 'user:get', 'user:delete'];
       
       for (const permission of adminPermissions) {
-        // Act
-        const result = await authService.doesUserHavePermission(authenticatedAdmin, permission);
-        
-        // Assert
-        expect(result).toBe(true);
+        // Act & Assert - should not throw
+        await expect(authService.doesUserHavePermission(authenticatedAdmin, permission))
+          .resolves.not.toThrow();
       }
     });
 

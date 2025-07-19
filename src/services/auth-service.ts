@@ -49,7 +49,7 @@ export class AuthService {
         return token;
     }
 
-    public async doesUserHavePermission(authenticatedUser: AuthenticatedUser, requiredPermission: string): Promise<boolean> {
+    public async doesUserHavePermission(authenticatedUser: AuthenticatedUser, requiredPermission: string): Promise<void> {
         logger.info(`Checking for permissions of, ${authenticatedUser.userId}, ${requiredPermission}`);
 
         // Verify user account still exists and is active
@@ -78,8 +78,6 @@ export class AuthService {
         if (!authorized) {
             throw new UnauthorizedError(`User does not have permission: ${requiredPermission}`);
         }
-        
-        return authorized;
         // todo: will add resource also here to check for resource specific permissions in future
     }
 }
