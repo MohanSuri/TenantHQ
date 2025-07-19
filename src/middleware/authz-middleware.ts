@@ -4,7 +4,7 @@ import logger from "@/utils/logger";
 import { Request, Response, NextFunction } from "express";
 
 export function doesUserHavePermission(requiredPermission: string) {
-  return async function (req:Request, res:Response, next:NextFunction) {
+  return async function (req: Request, res: Response, next: NextFunction) {
     logger.info(`doesUserHavePermission ${req.user!.userId} - ${requiredPermission}`)
     const user = req.user as AuthenticatedUser;
     
