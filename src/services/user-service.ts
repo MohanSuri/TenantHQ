@@ -1,5 +1,5 @@
 import { UserRepository } from '@repositories/user-repository';
-import { UserRole } from '@models/user';
+import { IUser, UserRole } from '@models/user';
 import logger from '@utils/logger';
 import bcrypt from 'bcryptjs';
 import { TenantService } from '@services/tenant-service';
@@ -37,5 +37,10 @@ export class UserService {
         const result = await UserService._userRepository.createUser(userName, email, hashedPassword, tenant._id, role ?? UserRole.USER);
         logger.info('user created successfully', { result });
         return {userName: email, password};
+    }
+
+    public async getUser(userId: string): Promise<IUser | null>{
+        // Caching will be added later
+        return await UserService._userRepository.getUserById(userId);
     }
 }

@@ -3,6 +3,7 @@ import {UnauthorizedError} from '@errors/custom-error';
 import jwt from 'jsonwebtoken';
 import { config } from '@config/config'
 import { AuthTokenPayload } from '@/types/auth';
+import logger from '@/utils/logger';
 
 declare global {
     namespace Express {
@@ -33,7 +34,9 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
         userId: decoded.userId,
         tenantId: decoded.tenantId,
         role: decoded.role
-    }
+    };
+
+    logger.info(`Authenticated ${req.user.userId}`);
 
     next();
 }
