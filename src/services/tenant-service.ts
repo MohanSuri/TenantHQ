@@ -47,7 +47,7 @@ public async getTenantByDomain(domain: string):  Promise<ITenant>{
 
 public async getTenantById(tenantId: string):  Promise<ITenant>{
   const tenant = await TenantService._tenantRepository.getTenantById(tenantId);
-  logger.info(`${tenant ? 'Returning' : 'Failed to fetch' } Tenant by domain ${tenantId}`);
+  logger.info(`${tenant ? 'Returning' : 'Failed to fetch' } Tenant by id ${tenantId}`);
   return tenant;
 }
 }

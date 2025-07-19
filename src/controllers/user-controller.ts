@@ -12,7 +12,7 @@ export const createUser = async(req: Request, res: Response) => {
     const parsed = CreateUserPayloadSchema.safeParse(req.body);
     if (!parsed.success) {
         logger.error(`Invalid input data: ${parsed.error.message}`);
-        throw new BadRequestError(`Invalid input data ${parsed.error.message}`)
+        throw new BadRequestError(`Invalid input data ${parsed.error.message}`);
     }
 
     const { userName, alias, password, role } = parsed.data;
@@ -21,7 +21,7 @@ export const createUser = async(req: Request, res: Response) => {
     const tenant: ITenant = await TenantService.getInstance().getTenantById(tenantId);
     if (!tenant) throw new NotFoundError(`Tenant ${tenantId} not found`);
     
-    const email = `${alias}@${tenant.domain}`
+    const email = `${alias}@${tenant.domain}`;
     
     const result = await UserService.getInstance().createUser(userName,  email, tenant.id.toString(), role, password);
     res.status(201).json({ message: "User created successfully", result });

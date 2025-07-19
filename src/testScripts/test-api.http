@@ -149,7 +149,7 @@ Authorization: {{authToken}}
 ### Create User - Invalid Input: Short Password (should fail)
 POST {{baseUrl}}/api/user/
 Content-Type: {{contentType}} 
-Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY1ZWNjNzQ2MDBiMjMwOTc5YmY4NjciLCJ0ZW5hbnRJZCI6IjY4NjVlY2M2NDYwMGIyMzA5NzliZjg2MyIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc1MjkzODI4MiwiZXhwIjoxNzUyOTQxODgyfQ.bckHC8R1Ej820GDZY-L14IhVtYtSyKMUyNktBUai-5E
+Authorization: {{authToken}}
 
 {
   "userName": "Valid Username",
