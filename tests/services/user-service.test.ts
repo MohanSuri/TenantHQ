@@ -3,12 +3,15 @@ import { UserRepository } from '../../src/repositories/user-repository';
 import { TenantService } from '../../src/services/tenant-service';
 import { UserRole } from '../../src/models/user';
 import logger from '../../src/utils/logger';
-import { mockTenantData } from '../__mocks__/test-data';
+import { mockTenantData, mockUserData, mockAdminUser, mockAuthenticatedAdmin, mockAuthenticatedUser } from '../__mocks__/test-data';
+import { ForbiddenError, NotFoundError, ConflictError } from '../../src/errors/custom-error';
+import mongoose from 'mongoose';
 
 // Mock the dependencies
 jest.mock('../../src/repositories/user-repository');
 jest.mock('../../src/services/tenant-service');
 jest.mock('../../src/utils/logger');
+jest.mock('mongoose');
 
 describe('UserService', () => {
   let userService: UserService;
@@ -27,6 +30,8 @@ describe('UserService', () => {
       getUserById: jest.fn(),
       getUsersByTenant: jest.fn(),
       verifyPassword: jest.fn(),
+      getActiveAdminCount: jest.fn(),
+      terminateUser: jest.fn(),
     } as any;
 
     mockTenantServiceInstance = {
@@ -326,6 +331,281 @@ describe('UserService', () => {
       );
       expect(result).toEqual({ email: 'test@example.com' }); // Updated return value
       expect(result.email).toBe('test@example.com');
+    });
+  });
+
+  describe('terminateUser', () => {
+    let mockSession: any;
+
+    beforeEach(() => {
+      // Mock mongoose session
+      mockSession = {
+        startTransaction: jest.fn(),
+        commitTransaction: jest.fn(),
+        abortTransaction: jest.fn(),
+        endSession: jest.fn(),
+      };
+      
+      (mongoose.startSession as jest.Mock).mockResolvedValue(mockSession);
+    });
+
+    const mockRegularUser = {
+      _id: { toString: () => '507f1f77bcf86cd799439014' },
+      userName: 'regularuser',
+      email: 'user@test.com',
+      password: 'hashedpassword',
+      tenantId: { toString: () => '507f1f77bcf86cd799439011' },
+      role: UserRole.USER,
+      isTerminated: false,
+      createdAt: new Date('2023-01-01T00:00:00.000Z'),
+    } as any; // Cast as any to avoid Document interface complexity
+
+    const mockTerminatedUser = {
+      ...mockRegularUser,
+      isTerminated: true,
+      terminationDetails: {
+        approvedBy: { toString: () => '507f1f77bcf86cd799439013' },
+        terminationDate: new Date('2023-01-02T00:00:00.000Z'),
+      },
+    } as any;
+
+    const mockAdminUserForTermination = {
+      _id: { toString: () => '507f1f77bcf86cd799439015' },
+      userName: 'adminuser',
+      email: 'admin2@test.com',
+      password: 'hashedpassword',
+      tenantId: { toString: () => '507f1f77bcf86cd799439011' },
+      role: UserRole.ADMIN,
+      isTerminated: false,
+      createdAt: new Date('2023-01-01T00:00:00.000Z'),
+    } as any;
+
+    const mockDifferentTenantUser = {
+      ...mockRegularUser,
+      tenantId: { toString: () => '507f1f77bcf86cd799439022' }, // Different tenant
+    } as any;
+
+    it('should successfully terminate a regular user as admin', async () => {
+      // Arrange
+      mockUserRepositoryInstance.getUserById
+        .mockResolvedValueOnce(mockRegularUser) // Target user
+        .mockResolvedValueOnce(mockAdminUser); // Actor verification
+      mockUserRepositoryInstance.terminateUser.mockResolvedValue({ modifiedCount: 1 });
+
+      // Act
+      await userService.terminateUser(mockRegularUser._id.toString(), mockAuthenticatedAdmin);
+
+      // Assert
+      expect(mockUserRepositoryInstance.getUserById).toHaveBeenCalledWith(
+        mockRegularUser._id.toString(),
+        mockSession
+      );
+      expect(mockUserRepositoryInstance.getUserById).toHaveBeenCalledWith(
+        mockAuthenticatedAdmin.userId,
+        mockSession
+      );
+      expect(mockUserRepositoryInstance.terminateUser).toHaveBeenCalledWith(
+        mockRegularUser._id.toString(),
+        mockAuthenticatedAdmin.userId,
+        mockAuthenticatedAdmin.tenantId,
+        mockSession
+      );
+      expect(mockSession.commitTransaction).toHaveBeenCalled();
+      expect(mockSession.endSession).toHaveBeenCalled();
+      expect(logger.info).toHaveBeenCalledWith(`Terminate request for ${mockRegularUser._id.toString()}`);
+    });
+
+    it('should successfully terminate an admin user when there are multiple admins', async () => {
+      // Arrange
+      mockUserRepositoryInstance.getUserById
+        .mockResolvedValueOnce(mockAdminUserForTermination) // Target admin user
+        .mockResolvedValueOnce(mockAdminUser); // Actor verification
+      mockUserRepositoryInstance.getActiveAdminCount.mockResolvedValue(2); // More than 1 admin
+      mockUserRepositoryInstance.terminateUser.mockResolvedValue({ modifiedCount: 1 });
+
+      // Act
+      await userService.terminateUser(mockAdminUserForTermination._id.toString(), mockAuthenticatedAdmin);
+
+      // Assert
+      expect(mockUserRepositoryInstance.getActiveAdminCount).toHaveBeenCalledWith(
+        mockAuthenticatedAdmin.tenantId,
+        mockSession
+      );
+      expect(mockUserRepositoryInstance.terminateUser).toHaveBeenCalledWith(
+        mockAdminUserForTermination._id.toString(),
+        mockAuthenticatedAdmin.userId,
+        mockAuthenticatedAdmin.tenantId,
+        mockSession
+      );
+      expect(mockSession.commitTransaction).toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenError when non-admin tries to terminate user', async () => {
+      // Act & Assert
+      await expect(
+        userService.terminateUser(mockRegularUser._id.toString(), mockAuthenticatedUser)
+      ).rejects.toThrow(ForbiddenError);
+      await expect(
+        userService.terminateUser(mockRegularUser._id.toString(), mockAuthenticatedUser)
+      ).rejects.toThrow('Only admins can terminate users');
+
+      // Verify transaction was not started
+      expect(mongoose.startSession).not.toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenError when admin tries to terminate themselves', async () => {
+      // Act & Assert
+      await expect(
+        userService.terminateUser(mockAuthenticatedAdmin.userId, mockAuthenticatedAdmin)
+      ).rejects.toThrow(ForbiddenError);
+      await expect(
+        userService.terminateUser(mockAuthenticatedAdmin.userId, mockAuthenticatedAdmin)
+      ).rejects.toThrow('Self termination is not allowed');
+
+      // Verify transaction was not started
+      expect(mongoose.startSession).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundError when user to be terminated does not exist', async () => {
+      // Arrange
+      mockUserRepositoryInstance.getUserById.mockResolvedValueOnce(null); // User not found
+
+      // Act & Assert
+      await expect(
+        userService.terminateUser('nonexistentuser123', mockAuthenticatedAdmin)
+      ).rejects.toThrow(NotFoundError);
+      await expect(
+        userService.terminateUser('nonexistentuser123', mockAuthenticatedAdmin)
+      ).rejects.toThrow('User nonexistentuser123 not found');
+
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+      expect(mockSession.endSession).toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenError when trying to terminate user from different tenant', async () => {
+      // Arrange
+      mockUserRepositoryInstance.getUserById.mockResolvedValueOnce(mockDifferentTenantUser);
+
+      // Act & Assert
+      await expect(
+        userService.terminateUser(mockDifferentTenantUser._id.toString(), mockAuthenticatedAdmin)
+      ).rejects.toThrow(ForbiddenError);
+
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+      expect(mockSession.endSession).toHaveBeenCalled();
+    });
+
+    it('should throw ConflictError when user is already terminated', async () => {
+      // Arrange
+      mockUserRepositoryInstance.getUserById.mockResolvedValueOnce(mockTerminatedUser);
+
+      // Act & Assert
+      await expect(
+        userService.terminateUser(mockTerminatedUser._id.toString(), mockAuthenticatedAdmin)
+      ).rejects.toThrow(ConflictError);
+
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+      expect(mockSession.endSession).toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenError when actor loses admin privileges during transaction', async () => {
+      // Arrange
+      const nonAdminActor = { ...mockAdminUser, role: UserRole.USER };
+      mockUserRepositoryInstance.getUserById
+        .mockResolvedValueOnce(mockRegularUser) // Target user
+        .mockResolvedValueOnce(nonAdminActor); // Actor verification - no longer admin
+
+      // Act & Assert
+      await expect(
+        userService.terminateUser(mockRegularUser._id.toString(), mockAuthenticatedAdmin)
+      ).rejects.toThrow(ForbiddenError);
+
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+      expect(mockSession.endSession).toHaveBeenCalled();
+    });
+
+    it('should throw ForbiddenError when trying to terminate the last active admin', async () => {
+      // Arrange
+      mockUserRepositoryInstance.getUserById
+        .mockResolvedValueOnce(mockAdminUserForTermination) // Target admin user
+        .mockResolvedValueOnce(mockAdminUser); // Actor verification
+      mockUserRepositoryInstance.getActiveAdminCount.mockResolvedValue(1); // Only 1 admin left
+
+      // Act & Assert
+      await expect(
+        userService.terminateUser(mockAdminUserForTermination._id.toString(), mockAuthenticatedAdmin)
+      ).rejects.toThrow(ForbiddenError);
+
+      expect(mockUserRepositoryInstance.getActiveAdminCount).toHaveBeenCalledWith(
+        mockAuthenticatedAdmin.tenantId,
+        mockSession
+      );
+      expect(mockUserRepositoryInstance.terminateUser).not.toHaveBeenCalled();
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+      expect(mockSession.endSession).toHaveBeenCalled();
+    });
+
+    it('should handle database errors during termination', async () => {
+      // Arrange
+      const dbError = new Error('Database connection failed');
+      mockUserRepositoryInstance.getUserById.mockRejectedValueOnce(dbError);
+
+      // Act & Assert
+      await expect(
+        userService.terminateUser(mockRegularUser._id.toString(), mockAuthenticatedAdmin)
+      ).rejects.toThrow('Database connection failed');
+
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+      expect(mockSession.endSession).toHaveBeenCalled();
+    });
+
+    it('should handle repository termination errors', async () => {
+      // Arrange
+      const terminationError = new Error('Failed to update user termination status');
+      mockUserRepositoryInstance.getUserById
+        .mockResolvedValueOnce(mockRegularUser) // Target user
+        .mockResolvedValueOnce(mockAdminUser); // Actor verification
+      mockUserRepositoryInstance.terminateUser.mockRejectedValueOnce(terminationError);
+
+      // Act & Assert
+      await expect(
+        userService.terminateUser(mockRegularUser._id.toString(), mockAuthenticatedAdmin)
+      ).rejects.toThrow('Failed to update user termination status');
+
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+      expect(mockSession.endSession).toHaveBeenCalled();
+    });
+
+    it('should handle actor not found in database during verification', async () => {
+      // Arrange
+      mockUserRepositoryInstance.getUserById
+        .mockResolvedValueOnce(mockRegularUser) // Target user
+        .mockResolvedValueOnce(null); // Actor not found
+
+      // Act & Assert
+      await expect(
+        userService.terminateUser(mockRegularUser._id.toString(), mockAuthenticatedAdmin)
+      ).rejects.toThrow(ForbiddenError);
+
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+      expect(mockSession.endSession).toHaveBeenCalled();
+    });
+
+    it('should ensure session is always ended even on unexpected errors', async () => {
+      // Arrange
+      const unexpectedError = new Error('Unexpected system error');
+      mockUserRepositoryInstance.getUserById.mockImplementationOnce(() => {
+        throw unexpectedError;
+      });
+
+      // Act & Assert
+      await expect(
+        userService.terminateUser(mockRegularUser._id.toString(), mockAuthenticatedAdmin)
+      ).rejects.toThrow('Unexpected system error');
+
+      // Verify session cleanup always happens
+      expect(mockSession.abortTransaction).toHaveBeenCalled();
+      expect(mockSession.endSession).toHaveBeenCalled();
     });
   });
 });
