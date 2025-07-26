@@ -56,7 +56,7 @@ export class UserService {
      *   - Cannot terminate the last active admin
      */
     public async terminateUser(userIdToBeTerminated: string, actor: AuthenticatedUser): Promise<void> {
-        logger.info(`Terminate request for ${userIdToBeTerminated}`)
+        logger.info(`Terminate request for ${userIdToBeTerminated}`);
         const {userId: actorUserId, tenantId: actorTenantId, role: actorRole} = actor;
         
         // Basic role check - only admins can terminate users

@@ -54,14 +54,18 @@ export class UserRepository {
         }
         
         if (!mongoose.Types.ObjectId.isValid(tenantId)) {
-            throw new BadRequestError('Invalid tenantId ID');
+            throw new BadRequestError('Invalid tenant ID');
         }
         
-       return await User.updateOne({ _id: new mongoose.Types.ObjectId(userId), isTerminated: { $ne: true }, tenantId: new mongoose.Types.ObjectId(tenantId)}, {
+        if (!mongoose.Types.ObjectId.isValid(approvedBy)) {
+            throw new BadRequestError('Invalid approvedBy ID');
+        }
+        
+        return await User.updateOne({ _id: new mongoose.Types.ObjectId(userId), isTerminated: { $ne: true }, tenantId: new mongoose.Types.ObjectId(tenantId)}, {
             isTerminated: true,
             terminationDetails: {
                 terminationDate: new Date(),
-                approvedBy: approvedBy,
+                approvedBy: new mongoose.Types.ObjectId(approvedBy),
             }
         }).session(session);
     }
