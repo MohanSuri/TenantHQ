@@ -1,5 +1,7 @@
+import { BadRequestError } from '@/errors/custom-error';
 import {UserRole, User, IUser} from '@models/user';
 import logger from '@utils/logger';
+import mongoose from 'mongoose';
 
 export class UserRepository {
 
@@ -20,8 +22,12 @@ export class UserRepository {
         return await User.findOne({ email });
     }
     
-    async getUserById(userId: string): Promise<IUser | null> {
-        return await User.findById(userId);
+    /*
+     * Returns leanUser for a given id */
+    async getUserById(userId: string, session?: mongoose.ClientSession): Promise<IUser | null> {
+        if (session) return await User.findById(new mongoose.Types.ObjectId(userId)).lean().session(session);
+        
+        return await User.findById(new mongoose.Types.ObjectId(userId)).lean();
     }
 
     async doesUserExist(email: string): Promise<boolean> {
@@ -34,12 +40,29 @@ export class UserRepository {
         return true;
         }
 
-    // async getUsersByTenant(domain: string): Promise<any[]> {
-    //     //const tenant = await this.tenantRepository.getTenantByDomain(domain);
-    //     return await User.find({ tenantId: tenant._id });
-    // }
+    async getActiveAdminCount(tenantId: string, session: mongoose.ClientSession): Promise<number> {
+        return await User.countDocuments({ 
+            tenantId: new mongoose.Types.ObjectId(tenantId), 
+            role: UserRole.ADMIN, 
+            isTerminated: { $ne: true } 
+        }).session(session);
+    }
 
-    // async verifyPassword(plainPassword: string, hashedPassword: string): Promise<boolean> {
-    //     return await bcrypt.compare(plainPassword, hashedPassword);
-    // }
+    async terminateUser(userId: string, approvedBy: string, tenantId: string, session: mongoose.ClientSession): Promise<any> {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            throw new BadRequestError('Invalid user ID');
+        }
+        
+        if (!mongoose.Types.ObjectId.isValid(tenantId)) {
+            throw new BadRequestError('Invalid tenantId ID');
+        }
+        
+       return await User.updateOne({ _id: new mongoose.Types.ObjectId(userId), isTerminated: { $ne: true }, tenantId: new mongoose.Types.ObjectId(tenantId)}, {
+            isTerminated: true,
+            terminationDetails: {
+                terminationDate: new Date(),
+                approvedBy: approvedBy,
+            }
+        }).session(session);
+    }
 }

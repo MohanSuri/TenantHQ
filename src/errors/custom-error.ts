@@ -37,3 +37,9 @@ export class ConflictError extends CustomError {
         super(message, statusCode, details);
     }
 }
+
+export class ForbiddenError extends CustomError {
+    constructor(message = 'Forbidden', statusCode = 403, details?: any){
+        super(message, statusCode, details);
+    }
+}
