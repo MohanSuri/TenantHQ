@@ -6,12 +6,18 @@ export enum UserRole {
 }
 
 export interface IUser extends Document {
+    _id: mongoose.Types.ObjectId;
     userName: string;
     email: string;
     password: string;
     createdAt: Date;
     tenantId: mongoose.Types.ObjectId;
     role: UserRole;
+    isTerminated: boolean;
+    terminationDetails?: {
+        approvedBy: mongoose.Types.ObjectId;
+        terminationDate: Date;
+    }
 }
 
 const userSchema = new mongoose.Schema<IUser>(
@@ -44,6 +50,20 @@ const userSchema = new mongoose.Schema<IUser>(
             default: UserRole.USER,
             required: true 
         },
+        isTerminated: {
+            type: Boolean,
+            default: false,
+        },
+        terminationDetails:{
+            approvedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                required: false
+            },
+            terminationDate: {
+                type: Date,
+                required: false
+            }
+        }
     }
 );
 

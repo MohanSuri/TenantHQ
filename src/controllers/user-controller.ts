@@ -41,7 +41,8 @@ export const updateUser = async(req: Request, res:Response) => {
     res.status(200).json({ message: `Updating user with ID: ${id}` });
 }
 
-export const deleteUser = async(req: Request, res:Response) => {
+export const terminateUser = async(req: Request, res:Response) => {
     const { id } = req.params;
-    res.status(200).json({ message: `Deleting user with ID: ${id}` });
+    await UserService.getInstance().terminateUser(id, req.user!);
+    res.status(200).json({ message: `Terminating user with ID: ${id}` });
 }

@@ -1,4 +1,4 @@
-import { createUser, getUser, updateUser, deleteUser, getUsers } from "@/controllers/user-controller";
+import { createUser, getUser, updateUser, terminateUser, getUsers } from "@/controllers/user-controller";
 import {Router} from "express";
 import  asyncHandler from 'express-async-handler';
 import { authenticate } from '@middleware/authn-middleware';
@@ -10,7 +10,7 @@ router.post("/", authenticate, doesUserHavePermission('user:create'), asyncHandl
 router.get("/:id", asyncHandler(getUser));
 router.get("/", asyncHandler(getUsers));
 router.patch("/:id", asyncHandler(updateUser));
-router.delete("/:id", asyncHandler(deleteUser));
+router.delete("/:id", authenticate, doesUserHavePermission('user:terminate'), asyncHandler(terminateUser));
 
 export default router;
 

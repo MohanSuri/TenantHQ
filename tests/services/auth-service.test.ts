@@ -99,7 +99,7 @@ describe('AuthService', () => {
       expect(bcrypt.compare).toHaveBeenCalledWith('password', 'hashedpassword');
       expect(jwt.sign).toHaveBeenCalledWith(
         {
-          userId: (mockUser._id as string).toString(),
+          userId: (mockUser._id as unknown as string).toString(),
           tenantId: (mockUser.tenantId as unknown as string).toString(),
           role: mockUser.role,
         },
@@ -230,7 +230,7 @@ describe('AuthService', () => {
       mockUserServiceInstance.getUser.mockResolvedValue(mockAdminUser);
 
       // Test multiple admin permissions
-      const adminPermissions = ['user:create', 'user:update', 'user:get', 'user:delete'];
+      const adminPermissions = ['user:create', 'user:update', 'user:get', 'user:terminate'];
       
       for (const permission of adminPermissions) {
         // Act & Assert - should not throw
