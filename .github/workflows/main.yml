@@ -13,7 +13,9 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-
+    env: 
+       MONGODB_CONNECTION_URI: ${{ secrets.MONGODB_CONNECTION_URI }}
+       JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
