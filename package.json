@@ -36,6 +36,7 @@
     "express-async-handler": "^1.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.0",
+    "redis": "^5.8.0",
     "winston": "^3.17.0",
     "zod": "^4.0.5"
   },
