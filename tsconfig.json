@@ -13,6 +13,8 @@
     "strict": true,                              // Enable all strict checks
     "skipLibCheck": true,                        // Faster compile (skip node_modules checks)
     "baseUrl": "./src",                          // Base directory for resolving non-relative module names
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "paths": {
       "@/*": ["*"],                              // Allow @/ imports from src
       "@controllers/*": ["controllers/*"],
