@@ -8,6 +8,7 @@ import { RolePermissions } from '../../src/constants/permissions';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { config } from '../../src/config/config';
+import { container } from '../../src/container';
 import logger from '../../src/utils/logger';
 
 // Mock dependencies
@@ -68,15 +69,15 @@ describe('AuthService', () => {
 
     // Mock constructors
     MockedUserRepository.mockImplementation(() => mockUserRepositoryInstance);
-    jest.spyOn(UserService, 'getInstance').mockReturnValue(mockUserServiceInstance);
+    jest.spyOn(container, 'resolve').mockImplementation(() => mockUserServiceInstance);
 
     // Mock config
     (config as any).JWT_SECRET = 'test-secret';
     (config as any).JWT_EXPIRY = '1h';
 
-    // Reset singleton instance
-    (AuthService as any)._instance = undefined;
-    authService = AuthService.getInstance();
+  // Reset singleton instance
+  (AuthService as any)._instance = undefined;
+  authService = AuthService.getInstance();
   });
 
   afterEach(() => {
@@ -265,7 +266,6 @@ describe('AuthService', () => {
     it('should return the same instance when called multiple times', () => {
       const instance1 = AuthService.getInstance();
       const instance2 = AuthService.getInstance();
-      
       expect(instance1).toBe(instance2);
     });
   });

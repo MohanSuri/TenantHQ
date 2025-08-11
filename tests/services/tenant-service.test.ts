@@ -3,10 +3,10 @@ import { TenantRepository } from '../../src/repositories/tenant-repository';
 import { UserService } from '../../src/services/user-service';
 import { UserRole } from '../../src/models/user';
 import logger from '../../src/utils/logger';
+import { container } from 'tsyringe';
 
 // Mock the dependencies
 jest.mock('../../src/repositories/tenant-repository');
-jest.mock('../../src/services/user-service');
 jest.mock('../../src/utils/logger');
 
 describe('TenantService', () => {
@@ -15,10 +15,8 @@ describe('TenantService', () => {
   let mockUserServiceInstance: jest.Mocked<UserService>;
 
   beforeEach(() => {
-    // Clear all mocks
     jest.clearAllMocks();
-    
-    // Create mock instances
+
     mockTenantRepositoryInstance = {
       createTenant: jest.fn(),
       doesTenantExist: jest.fn(),
@@ -33,9 +31,9 @@ describe('TenantService', () => {
 
     // Mock the TenantRepository constructor
     (TenantRepository as jest.MockedClass<typeof TenantRepository>).mockImplementation(() => mockTenantRepositoryInstance);
-    
-    // Mock UserService.getInstance
-    jest.spyOn(UserService, 'getInstance').mockReturnValue(mockUserServiceInstance);
+
+  // Register mockUserServiceInstance in tsyringe container using string token
+  container.registerInstance("UserService", mockUserServiceInstance);
 
     // Reset the singleton instance to get a fresh instance with mocked dependencies
     (TenantService as any)._instance = undefined;
@@ -43,8 +41,9 @@ describe('TenantService', () => {
   });
 
   afterEach(() => {
-    // Clean up singleton instance
     (TenantService as any)._instance = undefined;
+    // Reset container registration for UserService
+    container.reset();
   });
 
   describe('createTenant', () => {

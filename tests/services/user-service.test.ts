@@ -41,18 +41,11 @@ describe('UserService', () => {
     // Mock the constructor to return our mock instance
     (UserRepository as jest.MockedClass<typeof UserRepository>).mockImplementation(() => mockUserRepositoryInstance);
     
-    // Mock TenantService.getInstance
-    jest.spyOn(TenantService, 'getInstance').mockReturnValue(mockTenantServiceInstance);
-
-    // Reset the singleton instance to get a fresh instance with mocked dependencies
-    (UserService as any)._instance = undefined;
-    userService = UserService.getInstance();
+  // Directly instantiate UserService with mocked UserRepository
+  userService = new UserService(mockUserRepositoryInstance);
   });
 
-  afterEach(() => {
-    // Clean up singleton instance
-    (UserService as any)._instance = undefined;
-  });
+  // No singleton cleanup needed
 
   describe('createUser', () => {
     const mockUserData = {
@@ -251,14 +244,12 @@ describe('UserService', () => {
   });
 
   describe('Singleton Pattern', () => {
-    it('should return the same instance when called multiple times', () => {
-      // Act
-      const instance1 = UserService.getInstance();
-      const instance2 = UserService.getInstance();
-
-      // Assert
-      expect(instance1).toBe(instance2);
+    it('should create a new instance each time', () => {
+      const instance1 = new UserService(mockUserRepositoryInstance);
+      const instance2 = new UserService(mockUserRepositoryInstance);
+      expect(instance1).not.toBe(instance2);
       expect(instance1).toBeInstanceOf(UserService);
+      expect(instance2).toBeInstanceOf(UserService);
     });
   });
 

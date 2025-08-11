@@ -5,6 +5,7 @@ import { UserService } from '@/services/user-service';
 import { CreateUserPayloadSchema } from '@/types/user';
 import logger from '@/utils/logger';
 import { Request, Response } from 'express';
+import { container } from '@/container';
 
 export const createUser = async(req: Request, res: Response) => {
     logger.info('Received request to create new user');
@@ -23,7 +24,7 @@ export const createUser = async(req: Request, res: Response) => {
     
     const email = `${alias}@${tenant.domain}`;
     
-    const result = await UserService.getInstance().createUser(userName,  email, tenant.id.toString(), role, password);
+    const result = await container.resolve<UserService>("UserService").createUser(userName,  email, tenant.id.toString(), role, password);
     res.status(201).json({ message: "User created successfully", result });
 }
 
@@ -43,6 +44,6 @@ export const updateUser = async(req: Request, res:Response) => {
 
 export const terminateUser = async(req: Request, res:Response) => {
     const { id } = req.params;
-    await UserService.getInstance().terminateUser(id, req.user!);
+    await container.resolve<UserService>("UserService").terminateUser(id, req.user!);
     res.status(200).json({ message: `Terminating user with ID: ${id}` });
 }

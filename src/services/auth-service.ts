@@ -8,6 +8,7 @@ import { AuthenticatedUser } from '@/types/auth';
 import { RolePermissions } from '@/constants/permissions';
 import { UserService } from './user-service';
 import { IUser } from '@/models/user';
+import { container } from '@/container';
 
 export class AuthService {
     private static _instance: AuthService;
@@ -53,7 +54,7 @@ export class AuthService {
         logger.info(`Checking for permissions of, ${authenticatedUser.userId}, ${requiredPermission}`);
 
         // Verify user account still exists and is active
-        const userObj: IUser | null = await UserService.getInstance().getUser(authenticatedUser.userId);
+        const userObj: IUser | null = await container.resolve<UserService>("UserService").getUser(authenticatedUser.userId);
         if (!userObj) {
             throw new UnauthorizedError('User account no longer exists');
         }

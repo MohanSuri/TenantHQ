@@ -1,6 +1,7 @@
 import { UserService } from '@services/user-service';
 import { UserRole } from '@models/user';
 import { connectDB } from '@/db';
+import { container } from 'tsyringe';
 
 async function testUserService() {
     try {
@@ -9,7 +10,7 @@ async function testUserService() {
         
         console.log('Testing UserService...');
         
-        const userService = UserService.getInstance();
+        const userService = container.resolve<UserService>("UserService");
         
         // This should trigger your breakpoint!
         const result = await userService.createUser(

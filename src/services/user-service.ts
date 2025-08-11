@@ -5,24 +5,16 @@ import logger from '@utils/logger';
 import bcrypt from 'bcryptjs';
 import { AuthenticatedUser } from '@/types/auth';
 import mongoose from 'mongoose';
+import { inject, injectable } from 'tsyringe';
 
+@injectable()
 export class UserService {
-    private static _instance: UserService;
-    private static _userRepository: UserRepository
-    tenantRepository: any;
-    public static getInstance() {
-        if (!UserService._instance) {
-            UserService._instance = new UserService();
-        }
-        return UserService._instance;
-    }
-    private constructor() {
-        UserService._userRepository = new UserRepository();
+    constructor(@inject(UserRepository) private readonly userRepository: UserRepository) {
     }
 
     // This method assumes that the tenantId has been validated.
     public async createUser(userName: string, email: string, tenantId: string, role: UserRole = UserRole.USER, password?: string): Promise<any> {
-        const userExists = await UserService._userRepository.doesUserExist(email);
+        const userExists = await this.userRepository.doesUserExist(email);
         if (userExists) {
             logger.error('user email already exists', { email });
             throw new Error('user email already exists');
@@ -30,14 +22,14 @@ export class UserService {
         password = password?.trim() ?? 'password'
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const result = await UserService._userRepository.createUser(userName, email, hashedPassword, tenantId, role ?? UserRole.USER);
+        const result = await this.userRepository.createUser(userName, email, hashedPassword, tenantId, role ?? UserRole.USER);
         logger.info('user created successfully', { result });
         return {email: email};
     }
 
     public async getUser(userId: string): Promise<IUser | null>{
         // Caching will be added later
-        return await UserService._userRepository.getUserById(userId);
+        return await this.userRepository.getUserById(userId);
     }
 
 
@@ -76,7 +68,7 @@ export class UserService {
         session.startTransaction();
         try {
             // Fetch user within transaction to get consistent state
-            const user = await UserService._userRepository.getUserById(userIdToBeTerminated, session);
+            const user = await this.userRepository.getUserById(userIdToBeTerminated, session);
             
             if (!user) throw new NotFoundError(`User ${userIdToBeTerminated} not found`);
             
@@ -90,20 +82,20 @@ export class UserService {
             }
             
             // Re-verify actor permissions within transaction
-            const dbActor = await UserService._userRepository.getUserById(actorUserId, session);
+            const dbActor = await this.userRepository.getUserById(actorUserId, session);
             if (!dbActor || dbActor.role !== UserRole.ADMIN) {
                 throw new ForbiddenError(`Actor ${actorUserId} does not have admin privileges`);
             }
             
             // Prevent terminating the last admin
             if (user.role === UserRole.ADMIN) {
-                const activeAdminCount = await UserService._userRepository.getActiveAdminCount(actorTenantId, session);
+                const activeAdminCount = await this.userRepository.getActiveAdminCount(actorTenantId, session);
                 if (activeAdminCount <= 1) {
                     throw new ForbiddenError(`Cannot terminate the last active admin`);
                 }
             }
             
-            await UserService._userRepository.terminateUser(
+            await this.userRepository.terminateUser(
                 user._id.toString(),
                 actorUserId,
                 actorTenantId,

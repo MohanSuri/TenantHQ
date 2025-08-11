@@ -4,6 +4,7 @@ import { TenantRepository } from "@repositories/tenant-repository";
 import logger from "@utils/logger";
 import { UserService } from "@services/user-service";
 import { ITenant } from "@/models/tenant";
+import { container } from "@/container";
 export class TenantService {
  private static _tenantRepository: TenantRepository;
  private static _instance: TenantService
@@ -27,7 +28,7 @@ export class TenantService {
     
       const tenant = await TenantService._tenantRepository.createTenant(name, domain);
       logger.info('Tenant created successfully', { result: tenant });
-      await UserService.getInstance().createUser("admin", `admin@${domain}`, tenant.id.toString(), UserRole.ADMIN);
+      await container.resolve<UserService>("UserService").createUser("admin", `admin@${domain}`, tenant.id.toString(), UserRole.ADMIN);
       logger.info('Created admin user');
       return tenant;
 }

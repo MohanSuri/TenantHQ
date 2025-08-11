@@ -5,7 +5,7 @@
 @baseUrl = http://localhost:3000
 @contentType = application/json
 # Update this token after login - copy from login response
-@authToken = <Bearer token>
+@authToken = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODlhMWFkMGUzZTQ0YTI3YTE4ODRjZTQiLCJ0ZW5hbnRJZCI6IjY4OWExYWQwZTNlNDRhMjdhMTg4NGNlMSIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc1NDkyOTkyMiwiZXhwIjoxNzU0OTMzNTIyfQ.52i1Q5ZbRzEypOvN6JWrhu_YBdgyPB-qZcoV9w5GJ1E
 # ================================
 # BASIC HEALTH CHECKS
 # ================================
@@ -35,7 +35,7 @@ Content-Type: {{contentType}}
 
 {
   "name": "Tech Startup Inc",
-  "domain": "techstartup.io"
+  "domain": "techstartup12.io"
 }
 
 ### Try to Create Duplicate Tenant (should fail)
@@ -81,7 +81,7 @@ POST {{baseUrl}}/api/login
 Content-Type: {{contentType}}
 
 {
-    "email": "admin@techstartup.io",
+    "email": "admin@techstartup12.io",
     "password": "password"
 }
 
