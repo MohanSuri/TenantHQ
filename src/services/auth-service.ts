@@ -8,25 +8,20 @@ import { AuthenticatedUser } from '@/types/auth';
 import { RolePermissions } from '@/constants/permissions';
 import { UserService } from './user-service';
 import { IUser } from '@/models/user';
+import { inject, singleton } from "tsyringe";
 
+@singleton()
 export class AuthService {
-    private static _instance: AuthService;
-    private static _userRepository: UserRepository;
-
-    public static getInstance() {
-        if (!AuthService._instance) {
-            AuthService._instance = new AuthService();
-        }
-        return AuthService._instance;
-    }
-
-    private constructor() {
-        AuthService._userRepository = new UserRepository();
+    public constructor(
+        @inject(UserRepository) private readonly userRepository: UserRepository,
+        @inject(UserService) private readonly userService: UserService
+    ) {
+        // Instance methods do not require manual binding when using DI container
     }
 
     public async login(email: string, password: string): Promise<any> {
         logger.info(`Login attempt by ${email}`);
-        const user = await AuthService._userRepository.getUserByEmail(email);
+        const user = await this.userRepository.getUserByEmail(email);
         if (!user) throw new UnauthorizedError(`User ${email} doesn't exist`);
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -53,7 +48,7 @@ export class AuthService {
         logger.info(`Checking for permissions of, ${authenticatedUser.userId}, ${requiredPermission}`);
 
         // Verify user account still exists and is active
-        const userObj: IUser | null = await UserService.getInstance().getUser(authenticatedUser.userId);
+        const userObj: IUser | null = await this.userService.getUser(authenticatedUser.userId);
         if (!userObj) {
             throw new UnauthorizedError('User account no longer exists');
         }

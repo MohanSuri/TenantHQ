@@ -3,7 +3,7 @@ import { UserRepository } from '../../src/repositories/user-repository';
 import { TenantService } from '../../src/services/tenant-service';
 import { UserRole } from '../../src/models/user';
 import logger from '../../src/utils/logger';
-import { mockTenantData, mockUserData, mockAdminUser, mockAuthenticatedAdmin, mockAuthenticatedUser } from '../__mocks__/test-data';
+import { mockTenantData, mockAdminUser, mockAuthenticatedAdmin, mockAuthenticatedUser } from '../__mocks__/test-data';
 import { ForbiddenError, NotFoundError, ConflictError } from '../../src/errors/custom-error';
 import mongoose from 'mongoose';
 
@@ -21,7 +21,7 @@ describe('UserService', () => {
   beforeEach(() => {
     // Clear all mocks
     jest.clearAllMocks();
-    
+
     // Create mock instance
     mockUserRepositoryInstance = {
       createUser: jest.fn(),
@@ -38,21 +38,11 @@ describe('UserService', () => {
       getTenantByDomain: jest.fn(),
     } as any;
 
-    // Mock the constructor to return our mock instance
-    (UserRepository as jest.MockedClass<typeof UserRepository>).mockImplementation(() => mockUserRepositoryInstance);
-    
-    // Mock TenantService.getInstance
-    jest.spyOn(TenantService, 'getInstance').mockReturnValue(mockTenantServiceInstance);
-
-    // Reset the singleton instance to get a fresh instance with mocked dependencies
-    (UserService as any)._instance = undefined;
-    userService = UserService.getInstance();
+    // Directly instantiate UserService with mocked UserRepository
+    userService = new UserService(mockUserRepositoryInstance);
   });
 
-  afterEach(() => {
-    // Clean up singleton instance
-    (UserService as any)._instance = undefined;
-  });
+
 
   describe('createUser', () => {
     const mockUserData = {
@@ -251,15 +241,7 @@ describe('UserService', () => {
   });
 
   describe('Singleton Pattern', () => {
-    it('should return the same instance when called multiple times', () => {
-      // Act
-      const instance1 = UserService.getInstance();
-      const instance2 = UserService.getInstance();
-
-      // Assert
-      expect(instance1).toBe(instance2);
-      expect(instance1).toBeInstanceOf(UserService);
-    });
+  // Singleton Pattern test removed as it's not needed for direct instantiation unit tests
   });
 
   describe('Edge Cases and Input Validation', () => {

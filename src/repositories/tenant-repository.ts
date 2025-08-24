@@ -1,6 +1,8 @@
 import {Tenant} from '@models/tenant';
 import logger from '@utils/logger';
+import { singleton } from 'tsyringe';
 
+@singleton()
 export class TenantRepository {
     async createTenant(name:string, domain: string): Promise<any> {
         const tenant = new Tenant({ name, domain });

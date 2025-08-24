@@ -6,7 +6,6 @@ import logger from '../../src/utils/logger';
 
 // Mock the dependencies
 jest.mock('../../src/repositories/tenant-repository');
-jest.mock('../../src/services/user-service');
 jest.mock('../../src/utils/logger');
 
 describe('TenantService', () => {
@@ -15,10 +14,8 @@ describe('TenantService', () => {
   let mockUserServiceInstance: jest.Mocked<UserService>;
 
   beforeEach(() => {
-    // Clear all mocks
     jest.clearAllMocks();
-    
-    // Create mock instances
+
     mockTenantRepositoryInstance = {
       createTenant: jest.fn(),
       doesTenantExist: jest.fn(),
@@ -31,20 +28,12 @@ describe('TenantService', () => {
       createUser: jest.fn(),
     } as any;
 
-    // Mock the TenantRepository constructor
-    (TenantRepository as jest.MockedClass<typeof TenantRepository>).mockImplementation(() => mockTenantRepositoryInstance);
-    
-    // Mock UserService.getInstance
-    jest.spyOn(UserService, 'getInstance').mockReturnValue(mockUserServiceInstance);
-
-    // Reset the singleton instance to get a fresh instance with mocked dependencies
-    (TenantService as any)._instance = undefined;
-    tenantService = TenantService.getInstance();
+  // Directly instantiate TenantService with mocks
+  tenantService = new TenantService(mockTenantRepositoryInstance, mockUserServiceInstance);
   });
 
   afterEach(() => {
-    // Clean up singleton instance
-    (TenantService as any)._instance = undefined;
+  // No DI container usage, nothing to reset
   });
 
   describe('createTenant', () => {
@@ -69,7 +58,9 @@ describe('TenantService', () => {
       mockUserServiceInstance.createUser.mockResolvedValue({
         _id: '507f1f77bcf86cd799439012',
         userName: 'admin',
-        email: 'admin@test.com'
+        email: 'admin@test.com',
+        tenantId: '507f1f77bcf86cd799439011',
+        role: UserRole.ADMIN
       });
 
       // Act
@@ -124,9 +115,9 @@ describe('TenantService', () => {
 
     it('should handle user creation failure after tenant creation', async () => {
       // Arrange
-      mockTenantRepositoryInstance.doesTenantExist.mockResolvedValue(false);
-      mockTenantRepositoryInstance.createTenant.mockResolvedValue(mockCreatedTenant);
-      mockUserServiceInstance.createUser.mockRejectedValue(new Error('User creation failed'));
+  mockTenantRepositoryInstance.doesTenantExist.mockResolvedValue(false);
+  mockTenantRepositoryInstance.createTenant.mockResolvedValue(mockCreatedTenant);
+  mockUserServiceInstance.createUser.mockRejectedValue(new Error('User creation failed'));
 
       // Act & Assert
       await expect(tenantService.createTenant(mockTenantData.name, mockTenantData.domain))
@@ -191,18 +182,6 @@ describe('TenantService', () => {
         .rejects.toEqual(unknownError);
 
       expect(mockTenantRepositoryInstance.getAllTenants).toHaveBeenCalled();
-    });
-  });
-
-  describe('Singleton Pattern', () => {
-    it('should return the same instance when called multiple times', () => {
-      // Act
-      const instance1 = TenantService.getInstance();
-      const instance2 = TenantService.getInstance();
-
-      // Assert
-      expect(instance1).toBe(instance2);
-      expect(instance1).toBeInstanceOf(TenantService);
     });
   });
 });

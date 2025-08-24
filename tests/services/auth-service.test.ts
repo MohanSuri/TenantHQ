@@ -8,6 +8,7 @@ import { RolePermissions } from '../../src/constants/permissions';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { config } from '../../src/config/config';
+import { container } from 'tsyringe';
 import logger from '../../src/utils/logger';
 
 // Mock dependencies
@@ -66,21 +67,13 @@ describe('AuthService', () => {
       createUser: jest.fn(),
     } as any;
 
-    // Mock constructors
-    MockedUserRepository.mockImplementation(() => mockUserRepositoryInstance);
-    jest.spyOn(UserService, 'getInstance').mockReturnValue(mockUserServiceInstance);
-
     // Mock config
     (config as any).JWT_SECRET = 'test-secret';
     (config as any).JWT_EXPIRY = '1h';
-
-    // Reset singleton instance
-    (AuthService as any)._instance = undefined;
-    authService = AuthService.getInstance();
   });
 
   afterEach(() => {
-    (AuthService as any)._instance = undefined;
+    container.reset();
   });
 
   describe('login', () => {
@@ -90,8 +83,9 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       (jwt.sign as jest.Mock).mockReturnValue('mock-jwt-token');
 
-      // Act
-      const result = await authService.login('test@example.com', 'password');
+  // Act
+  const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
+  const result = await authService.login('test@example.com', 'password');
 
       // Assert
       expect(result).toBe('mock-jwt-token');
@@ -113,6 +107,7 @@ describe('AuthService', () => {
       mockUserRepositoryInstance.getUserByEmail.mockResolvedValue(null);
 
       // Act & Assert
+      const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
       await expect(authService.login('nonexistent@example.com', 'password'))
         .rejects.toThrow(new UnauthorizedError('User nonexistent@example.com doesn\'t exist'));
     });
@@ -123,6 +118,7 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       // Act & Assert
+      const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
       await expect(authService.login('test@example.com', 'wrongpassword'))
         .rejects.toThrow(new UnauthorizedError('Invalid username/password'));
     });
@@ -134,6 +130,7 @@ describe('AuthService', () => {
       (config as any).JWT_SECRET = undefined;
 
       // Act & Assert
+      const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
       await expect(authService.login('test@example.com', 'password'))
         .rejects.toThrow(new InternalServerError('Environment is not configured'));
     });
@@ -154,8 +151,9 @@ describe('AuthService', () => {
 
     it('should not throw when user has required permission', async () => {
       // Arrange
-      mockUserServiceInstance.getUser.mockResolvedValue(mockAdminUser);
+      mockUserServiceInstance.getUser.mockResolvedValue({ ...mockAdminUser, role: UserRole.ADMIN } as IUser);
       const adminAuth = { ...authenticatedAdmin, role: 'ADMIN' };
+      const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
 
       // Act & Assert - should not throw
       await expect(authService.doesUserHavePermission(adminAuth, 'user:create'))
@@ -168,7 +166,8 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedError when user account no longer exists', async () => {
       // Arrange
-      mockUserServiceInstance.getUser.mockResolvedValue(null as any);
+      mockUserServiceInstance.getUser.mockResolvedValue(null);
+      const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
 
       // Act & Assert
       await expect(authService.doesUserHavePermission(authenticatedUser, 'user:create'))
@@ -179,8 +178,9 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedError when JWT role does not match DB role', async () => {
       // Arrange
-      const userWithDifferentRole = { ...mockUser, role: UserRole.ADMIN } as any;
-      mockUserServiceInstance.getUser.mockResolvedValue(userWithDifferentRole);
+      // Simulate user with different role
+      mockUserServiceInstance.getUser.mockResolvedValue({ ...mockUser, role: UserRole.ADMIN } as IUser);
+      const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
 
       // Act & Assert
       await expect(authService.doesUserHavePermission(authenticatedUser, 'user:create'))
@@ -193,9 +193,10 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedError for unknown role', async () => {
       // Arrange
-      const userWithUnknownRole = { ...mockUser, role: 'UNKNOWN_ROLE' as UserRole } as any;
+      // Simulate user with unknown role
+      mockUserServiceInstance.getUser.mockResolvedValue({ ...mockUser, role: 'UNKNOWN_ROLE' as UserRole } as IUser);
       const authWithUnknownRole = { ...authenticatedUser, role: 'UNKNOWN_ROLE' };
-      mockUserServiceInstance.getUser.mockResolvedValue(userWithUnknownRole);
+      const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
 
       // Act & Assert
       await expect(authService.doesUserHavePermission(authWithUnknownRole, 'user:create'))
@@ -204,7 +205,9 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedError when user lacks required permission', async () => {
       // Arrange
-      mockUserServiceInstance.getUser.mockResolvedValue(mockUser);
+      // Simulate user with USER role and no permissions
+      mockUserServiceInstance.getUser.mockResolvedValue({ ...mockUser, role: UserRole.USER, permissions: [] } as unknown as IUser);
+      const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
 
       // Act & Assert
       await expect(authService.doesUserHavePermission(authenticatedUser, 'user:create'))
@@ -215,7 +218,9 @@ describe('AuthService', () => {
 
     it('should handle USER role with empty permissions array', async () => {
       // Arrange
-      mockUserServiceInstance.getUser.mockResolvedValue(mockUser);
+      // Simulate user with USER role and empty permissions
+      mockUserServiceInstance.getUser.mockResolvedValue({ ...mockUser, role: UserRole.USER, permissions: [] } as unknown as IUser);
+      const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
 
       // Act & Assert
       await expect(authService.doesUserHavePermission(authenticatedUser, 'any:permission'))
@@ -227,7 +232,9 @@ describe('AuthService', () => {
 
     it('should not throw when admin user has multiple permissions', async () => {
       // Arrange
-      mockUserServiceInstance.getUser.mockResolvedValue(mockAdminUser);
+      // Simulate admin user with all permissions
+      mockUserServiceInstance.getUser.mockResolvedValue({ ...mockAdminUser, role: UserRole.ADMIN, permissions: ['user:create', 'user:update', 'user:get', 'user:terminate'] } as unknown as IUser);
+      const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
 
       // Test multiple admin permissions
       const adminPermissions = ['user:create', 'user:update', 'user:get', 'user:terminate'];
@@ -242,6 +249,7 @@ describe('AuthService', () => {
     it('should throw UnauthorizedError when getUser throws an error', async () => {
       // Arrange
       mockUserServiceInstance.getUser.mockRejectedValue(new Error('Database error'));
+      const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
 
       // Act & Assert
       await expect(authService.doesUserHavePermission(authenticatedUser, 'user:create'))
@@ -250,7 +258,9 @@ describe('AuthService', () => {
 
     it('should handle role validation correctly with matching roles', async () => {
       // Arrange
-      mockUserServiceInstance.getUser.mockResolvedValue(mockUser);
+      // Simulate user with matching role but no permission
+      mockUserServiceInstance.getUser.mockResolvedValue({ ...mockUser, role: UserRole.USER, permissions: [] } as unknown as IUser);
+      const authService = new AuthService(mockUserRepositoryInstance, mockUserServiceInstance);
 
       // Act & Assert - This should pass role validation but fail permission check
       await expect(authService.doesUserHavePermission(authenticatedUser, 'nonexistent:permission'))
@@ -258,15 +268,6 @@ describe('AuthService', () => {
       
       // Verify no role mismatch warning was logged
       expect(logger.warn).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('singleton pattern', () => {
-    it('should return the same instance when called multiple times', () => {
-      const instance1 = AuthService.getInstance();
-      const instance2 = AuthService.getInstance();
-      
-      expect(instance1).toBe(instance2);
     });
   });
 });

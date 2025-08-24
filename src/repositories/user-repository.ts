@@ -2,9 +2,10 @@ import { BadRequestError } from '@/errors/custom-error';
 import {UserRole, User, IUser} from '@models/user';
 import logger from '@utils/logger';
 import mongoose from 'mongoose';
+import {singleton} from "tsyringe";
 
+@singleton()
 export class UserRepository {
-
     async createUser(userName: string, email: string, password: string, tenantId: any, role?: UserRole): Promise<any> {
         const user = new User({ 
             userName, 
