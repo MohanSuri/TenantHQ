@@ -4,7 +4,6 @@ import { TenantRepository } from "@repositories/tenant-repository";
 import logger from "@utils/logger";
 import { UserService } from "@services/user-service";
 import { ITenant } from "@/models/tenant";
-import { container } from "@/container";
 import { inject, singleton } from "tsyringe";
 
 @singleton()

@@ -73,7 +73,6 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
-    (AuthService as any)._instance = undefined;
     container.reset();
   });
 

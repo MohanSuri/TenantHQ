@@ -3,7 +3,6 @@ import { TenantRepository } from '../../src/repositories/tenant-repository';
 import { UserService } from '../../src/services/user-service';
 import { UserRole } from '../../src/models/user';
 import logger from '../../src/utils/logger';
-import { container } from 'tsyringe';
 
 // Mock the dependencies
 jest.mock('../../src/repositories/tenant-repository');
