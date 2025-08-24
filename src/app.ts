@@ -8,7 +8,6 @@ import tenantRoutes from '@routes/tenant.routes';
 import authRoutes from '@routes/auth.routes';
 import { errorHandler } from '@middleware/error-handler-middleware';
 import userRoutes from './routes/user.routes';
-import { container } from '@/container';
 
 const app = express();
 

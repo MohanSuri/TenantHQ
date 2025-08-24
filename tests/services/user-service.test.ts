@@ -3,10 +3,9 @@ import { UserRepository } from '../../src/repositories/user-repository';
 import { TenantService } from '../../src/services/tenant-service';
 import { UserRole } from '../../src/models/user';
 import logger from '../../src/utils/logger';
-import { mockTenantData, mockUserData, mockAdminUser, mockAuthenticatedAdmin, mockAuthenticatedUser } from '../__mocks__/test-data';
+import { mockTenantData, mockAdminUser, mockAuthenticatedAdmin, mockAuthenticatedUser } from '../__mocks__/test-data';
 import { ForbiddenError, NotFoundError, ConflictError } from '../../src/errors/custom-error';
 import mongoose from 'mongoose';
-import { container } from '../../src/container';
 
 // Mock the dependencies
 jest.mock('../../src/repositories/user-repository');

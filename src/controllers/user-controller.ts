@@ -5,7 +5,7 @@ import { UserService } from '@/services/user-service';
 import { CreateUserPayloadSchema } from '@/types/user';
 import logger from '@/utils/logger';
 import { Request, Response } from 'express';
-import { container } from '@/container';
+import { container } from 'tsyringe';
 
 export const createUser = async(req: Request, res: Response) => {
     logger.info('Received request to create new user');

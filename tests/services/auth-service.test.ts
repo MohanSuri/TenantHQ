@@ -8,7 +8,7 @@ import { RolePermissions } from '../../src/constants/permissions';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { config } from '../../src/config/config';
-import { container } from '../../src/container';
+import { container } from 'tsyringe';
 import logger from '../../src/utils/logger';
 
 // Mock dependencies
