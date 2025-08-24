@@ -29,21 +29,12 @@ describe('TenantService', () => {
       createUser: jest.fn(),
     } as any;
 
-    // Mock the TenantRepository constructor
-    (TenantRepository as jest.MockedClass<typeof TenantRepository>).mockImplementation(() => mockTenantRepositoryInstance);
-
-  // Register mockUserServiceInstance in tsyringe container using string token
-  container.registerInstance("UserService", mockUserServiceInstance);
-
-    // Reset the singleton instance to get a fresh instance with mocked dependencies
-    (TenantService as any)._instance = undefined;
-  tenantService = container.resolve(TenantService);
+  // Directly instantiate TenantService with mocks
+  tenantService = new TenantService(mockTenantRepositoryInstance, mockUserServiceInstance);
   });
 
   afterEach(() => {
-    (TenantService as any)._instance = undefined;
-    // Reset container registration for UserService
-    container.reset();
+  // No DI container usage, nothing to reset
   });
 
   describe('createTenant', () => {
@@ -68,7 +59,9 @@ describe('TenantService', () => {
       mockUserServiceInstance.createUser.mockResolvedValue({
         _id: '507f1f77bcf86cd799439012',
         userName: 'admin',
-        email: 'admin@test.com'
+        email: 'admin@test.com',
+        tenantId: '507f1f77bcf86cd799439011',
+        role: UserRole.ADMIN
       });
 
       // Act
@@ -123,9 +116,9 @@ describe('TenantService', () => {
 
     it('should handle user creation failure after tenant creation', async () => {
       // Arrange
-      mockTenantRepositoryInstance.doesTenantExist.mockResolvedValue(false);
-      mockTenantRepositoryInstance.createTenant.mockResolvedValue(mockCreatedTenant);
-      mockUserServiceInstance.createUser.mockRejectedValue(new Error('User creation failed'));
+  mockTenantRepositoryInstance.doesTenantExist.mockResolvedValue(false);
+  mockTenantRepositoryInstance.createTenant.mockResolvedValue(mockCreatedTenant);
+  mockUserServiceInstance.createUser.mockRejectedValue(new Error('User creation failed'));
 
       // Act & Assert
       await expect(tenantService.createTenant(mockTenantData.name, mockTenantData.domain))

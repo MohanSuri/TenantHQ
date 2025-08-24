@@ -8,12 +8,14 @@ import { AuthenticatedUser } from '@/types/auth';
 import { RolePermissions } from '@/constants/permissions';
 import { UserService } from './user-service';
 import { IUser } from '@/models/user';
-import { container } from '@/container';
 import { inject, singleton } from "tsyringe";
 
 @singleton()
 export class AuthService {
-    public constructor(@inject(UserRepository) private readonly userRepository: UserRepository) {
+    public constructor(
+        @inject(UserRepository) private readonly userRepository: UserRepository,
+        @inject(UserService) private readonly userService: UserService
+    ) {
         // Instance methods do not require manual binding when using DI container
     }
 
@@ -46,7 +48,7 @@ export class AuthService {
         logger.info(`Checking for permissions of, ${authenticatedUser.userId}, ${requiredPermission}`);
 
         // Verify user account still exists and is active
-        const userObj: IUser | null = await container.resolve<UserService>("UserService").getUser(authenticatedUser.userId);
+        const userObj: IUser | null = await this.userService.getUser(authenticatedUser.userId);
         if (!userObj) {
             throw new UnauthorizedError('User account no longer exists');
         }

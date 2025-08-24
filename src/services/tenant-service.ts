@@ -9,7 +9,10 @@ import { inject, singleton } from "tsyringe";
 
 @singleton()
 export class TenantService {
-  public constructor(@inject(TenantRepository) private readonly tenantRepository: TenantRepository) {}
+  public constructor(
+    @inject(TenantRepository) private readonly tenantRepository: TenantRepository,
+    @inject(UserService) private readonly userService: UserService
+  ) {}
 
  public async createTenant(name: string, domain: string): Promise<ITenant>{
     logger.info('Creating tenant', { name, domain });
@@ -21,7 +24,7 @@ export class TenantService {
     
       const tenant = await this.tenantRepository.createTenant(name, domain);
       logger.info('Tenant created successfully', { result: tenant });
-      await container.resolve<UserService>("UserService").createUser("admin", `admin@${domain}`, tenant.id.toString(), UserRole.ADMIN);
+      await this.userService.createUser("admin", `admin@${domain}`, tenant.id.toString(), UserRole.ADMIN);
       logger.info('Created admin user');
       return tenant;
 }
