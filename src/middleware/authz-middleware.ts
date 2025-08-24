@@ -10,7 +10,7 @@ export function doesUserHavePermission(requiredPermission: string) {
     const user = req.user as AuthenticatedUser;
     
     try {
-      await container.resolve<AuthService>('AuthService').doesUserHavePermission(user, requiredPermission);
+      await container.resolve<AuthService>(AuthService).doesUserHavePermission(user, requiredPermission);
       next();
     } catch (error) {
       next(error); // This will pass the error to the error handling middleware

@@ -19,12 +19,12 @@ export const createUser = async(req: Request, res: Response) => {
     const { userName, alias, password, role } = parsed.data;
 
     const tenantId = req.user!.tenantId;
-    const tenant: ITenant = await container.resolve<TenantService>('TenantService').getTenantById(tenantId);
+    const tenant: ITenant = await container.resolve(TenantService).getTenantById(tenantId);
     if (!tenant) throw new NotFoundError(`Tenant ${tenantId} not found`);
     
     const email = `${alias}@${tenant.domain}`;
-    
-    const result = await container.resolve<UserService>("UserService").createUser(userName,  email, tenant.id.toString(), role, password);
+
+    const result = await container.resolve(UserService).createUser(userName,  email, tenant.id.toString(), role, password);
     res.status(201).json({ message: "User created successfully", result });
 }
 
@@ -44,6 +44,6 @@ export const updateUser = async(req: Request, res:Response) => {
 
 export const terminateUser = async(req: Request, res:Response) => {
     const { id } = req.params;
-    await container.resolve<UserService>("UserService").terminateUser(id, req.user!);
+    await container.resolve(UserService).terminateUser(id, req.user!);
     res.status(200).json({ message: `Terminating user with ID: ${id}` });
 }

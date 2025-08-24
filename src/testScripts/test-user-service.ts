@@ -9,9 +9,9 @@ async function testUserService() {
         await connectDB();
         
         console.log('Testing UserService...');
-        
-        const userService = container.resolve<UserService>("UserService");
-        
+
+        const userService = container.resolve(UserService);
+
         // This should trigger your breakpoint!
         const result = await userService.createUser(
             'John Doe',

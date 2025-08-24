@@ -19,7 +19,7 @@ export const createTenant = async (req: Request, res: Response, next: NextFuncti
          return;
     }
 
-    const result = await container.resolve<TenantService>('TenantService').createTenant(name, domain);
+    const result = await container.resolve(TenantService).createTenant(name, domain);
 
      res.status(201).json({
         message: 'Tenant created successfully',
@@ -29,7 +29,7 @@ export const createTenant = async (req: Request, res: Response, next: NextFuncti
 };
 
 export const getAllTenants = async (req: Request, res: Response) => {
-    const tenants = await container.resolve<TenantService>('TenantService').getAllTenants();
+    const tenants = await container.resolve(TenantService).getAllTenants();
     res.status(200).json({
         message: 'Tenants fetched successfully',
         tenants
