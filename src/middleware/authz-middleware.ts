@@ -2,6 +2,7 @@ import { AuthService } from "@/services/auth-service";
 import { AuthenticatedUser } from "@/types/auth";
 import logger from "@/utils/logger";
 import { Request, Response, NextFunction } from "express";
+import { container } from "tsyringe";
 
 export function doesUserHavePermission(requiredPermission: string) {
   return async function (req: Request, res: Response, next: NextFunction) {
@@ -9,7 +10,7 @@ export function doesUserHavePermission(requiredPermission: string) {
     const user = req.user as AuthenticatedUser;
     
     try {
-      await AuthService.getInstance().doesUserHavePermission(user, requiredPermission);
+      await container.resolve<AuthService>('AuthService').doesUserHavePermission(user, requiredPermission);
       next();
     } catch (error) {
       next(error); // This will pass the error to the error handling middleware

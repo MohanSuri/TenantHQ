@@ -5,9 +5,9 @@ import logger from '@utils/logger';
 import bcrypt from 'bcryptjs';
 import { AuthenticatedUser } from '@/types/auth';
 import mongoose from 'mongoose';
-import { inject, injectable } from 'tsyringe';
+import { inject, singleton } from 'tsyringe';
 
-@injectable()
+@singleton()
 export class UserService {
     constructor(@inject(UserRepository) private readonly userRepository: UserRepository) {
     }

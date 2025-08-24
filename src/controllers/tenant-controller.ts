@@ -2,6 +2,7 @@
 import { NextFunction, Request,  Response } from 'express';
 import { TenantService } from '@services/tenant-service';
 import logger from '@utils/logger';
+import { container } from 'tsyringe';
 /* 
 Example of req body
 {
@@ -18,7 +19,7 @@ export const createTenant = async (req: Request, res: Response, next: NextFuncti
          return;
     }
 
-    const result = await TenantService.getInstance().createTenant(name, domain);
+    const result = await container.resolve<TenantService>('TenantService').createTenant(name, domain);
 
      res.status(201).json({
         message: 'Tenant created successfully',
@@ -28,7 +29,7 @@ export const createTenant = async (req: Request, res: Response, next: NextFuncti
 };
 
 export const getAllTenants = async (req: Request, res: Response) => {
-    const tenants = await TenantService.getInstance().getAllTenants();
+    const tenants = await container.resolve<TenantService>('TenantService').getAllTenants();
     res.status(200).json({
         message: 'Tenants fetched successfully',
         tenants

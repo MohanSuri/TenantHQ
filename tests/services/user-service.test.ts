@@ -6,6 +6,7 @@ import logger from '../../src/utils/logger';
 import { mockTenantData, mockUserData, mockAdminUser, mockAuthenticatedAdmin, mockAuthenticatedUser } from '../__mocks__/test-data';
 import { ForbiddenError, NotFoundError, ConflictError } from '../../src/errors/custom-error';
 import mongoose from 'mongoose';
+import { container } from '../../src/container';
 
 // Mock the dependencies
 jest.mock('../../src/repositories/user-repository');
@@ -21,7 +22,7 @@ describe('UserService', () => {
   beforeEach(() => {
     // Clear all mocks
     jest.clearAllMocks();
-    
+
     // Create mock instance
     mockUserRepositoryInstance = {
       createUser: jest.fn(),
@@ -38,14 +39,11 @@ describe('UserService', () => {
       getTenantByDomain: jest.fn(),
     } as any;
 
-    // Mock the constructor to return our mock instance
-    (UserRepository as jest.MockedClass<typeof UserRepository>).mockImplementation(() => mockUserRepositoryInstance);
-    
-  // Directly instantiate UserService with mocked UserRepository
-  userService = new UserService(mockUserRepositoryInstance);
+    // Directly instantiate UserService with mocked UserRepository
+    userService = new UserService(mockUserRepositoryInstance);
   });
 
-  // No singleton cleanup needed
+
 
   describe('createUser', () => {
     const mockUserData = {
@@ -244,13 +242,7 @@ describe('UserService', () => {
   });
 
   describe('Singleton Pattern', () => {
-    it('should create a new instance each time', () => {
-      const instance1 = new UserService(mockUserRepositoryInstance);
-      const instance2 = new UserService(mockUserRepositoryInstance);
-      expect(instance1).not.toBe(instance2);
-      expect(instance1).toBeInstanceOf(UserService);
-      expect(instance2).toBeInstanceOf(UserService);
-    });
+  // Singleton Pattern test removed as it's not needed for direct instantiation unit tests
   });
 
   describe('Edge Cases and Input Validation', () => {

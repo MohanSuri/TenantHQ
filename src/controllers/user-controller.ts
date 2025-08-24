@@ -19,7 +19,7 @@ export const createUser = async(req: Request, res: Response) => {
     const { userName, alias, password, role } = parsed.data;
 
     const tenantId = req.user!.tenantId;
-    const tenant: ITenant = await TenantService.getInstance().getTenantById(tenantId);
+    const tenant: ITenant = await container.resolve<TenantService>('TenantService').getTenantById(tenantId);
     if (!tenant) throw new NotFoundError(`Tenant ${tenantId} not found`);
     
     const email = `${alias}@${tenant.domain}`;

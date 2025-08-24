@@ -50,6 +50,7 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    container.reset();
 
     // Mock UserRepository instance
     mockUserRepositoryInstance = {
@@ -61,27 +62,36 @@ describe('AuthService', () => {
       verifyPassword: jest.fn(),
     } as any;
 
+    // Register the mock in the DI container using the string token
+    container.registerInstance("UserRepository", mockUserRepositoryInstance);
+
+    authService = container.resolve(AuthService);
+
     // Mock UserService instance
     mockUserServiceInstance = {
       getUser: jest.fn(),
       createUser: jest.fn(),
     } as any;
 
+    // Register the mock in the DI container using the string token
+    container.registerInstance("UserService", mockUserServiceInstance);
+
     // Mock constructors
-    MockedUserRepository.mockImplementation(() => mockUserRepositoryInstance);
-    jest.spyOn(container, 'resolve').mockImplementation(() => mockUserServiceInstance);
+  MockedUserRepository.mockImplementation(() => mockUserRepositoryInstance);
 
     // Mock config
     (config as any).JWT_SECRET = 'test-secret';
     (config as any).JWT_EXPIRY = '1h';
 
-  // Reset singleton instance
-  (AuthService as any)._instance = undefined;
-  authService = AuthService.getInstance();
+    // Unregister and re-register AuthService to ensure fresh DI
+    container.register("AuthService", { useClass: AuthService });
+    (AuthService as any)._instance = undefined;
+    authService = container.resolve(AuthService);
   });
 
   afterEach(() => {
     (AuthService as any)._instance = undefined;
+    container.reset();
   });
 
   describe('login', () => {
@@ -92,7 +102,7 @@ describe('AuthService', () => {
       (jwt.sign as jest.Mock).mockReturnValue('mock-jwt-token');
 
       // Act
-      const result = await authService.login('test@example.com', 'password');
+    const result = await authService.login('test@example.com', 'password');
 
       // Assert
       expect(result).toBe('mock-jwt-token');
@@ -259,14 +269,6 @@ describe('AuthService', () => {
       
       // Verify no role mismatch warning was logged
       expect(logger.warn).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('singleton pattern', () => {
-    it('should return the same instance when called multiple times', () => {
-      const instance1 = AuthService.getInstance();
-      const instance2 = AuthService.getInstance();
-      expect(instance1).toBe(instance2);
     });
   });
 });

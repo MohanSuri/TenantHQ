@@ -37,7 +37,7 @@ describe('TenantService', () => {
 
     // Reset the singleton instance to get a fresh instance with mocked dependencies
     (TenantService as any)._instance = undefined;
-    tenantService = TenantService.getInstance();
+  tenantService = container.resolve(TenantService);
   });
 
   afterEach(() => {
@@ -190,18 +190,6 @@ describe('TenantService', () => {
         .rejects.toEqual(unknownError);
 
       expect(mockTenantRepositoryInstance.getAllTenants).toHaveBeenCalled();
-    });
-  });
-
-  describe('Singleton Pattern', () => {
-    it('should return the same instance when called multiple times', () => {
-      // Act
-      const instance1 = TenantService.getInstance();
-      const instance2 = TenantService.getInstance();
-
-      // Assert
-      expect(instance1).toBe(instance2);
-      expect(instance1).toBeInstanceOf(TenantService);
     });
   });
 });

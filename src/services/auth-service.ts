@@ -9,25 +9,17 @@ import { RolePermissions } from '@/constants/permissions';
 import { UserService } from './user-service';
 import { IUser } from '@/models/user';
 import { container } from '@/container';
+import { inject, singleton } from "tsyringe";
 
+@singleton()
 export class AuthService {
-    private static _instance: AuthService;
-    private static _userRepository: UserRepository;
-
-    public static getInstance() {
-        if (!AuthService._instance) {
-            AuthService._instance = new AuthService();
-        }
-        return AuthService._instance;
-    }
-
-    private constructor() {
-        AuthService._userRepository = new UserRepository();
+    public constructor(@inject(UserRepository) private readonly userRepository: UserRepository) {
+        // Instance methods do not require manual binding when using DI container
     }
 
     public async login(email: string, password: string): Promise<any> {
         logger.info(`Login attempt by ${email}`);
-        const user = await AuthService._userRepository.getUserByEmail(email);
+        const user = await this.userRepository.getUserByEmail(email);
         if (!user) throw new UnauthorizedError(`User ${email} doesn't exist`);
 
         const isMatch = await bcrypt.compare(password, user.password);
